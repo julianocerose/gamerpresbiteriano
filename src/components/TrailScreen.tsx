@@ -366,16 +366,21 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                             {student.attendance?.includes(new Date().toLocaleDateString('en-CA')) && (
                                 <motion.div
                                     initial={{ scale: 0, opacity: 0 }}
-                                    animate={{ scale: [1, 1.2, 1], opacity: 1, rotate: [0, 10, -10, 0] }}
-                                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                                    animate={{
+                                        scale: [1, 1.3, 1],
+                                        opacity: 1,
+                                        rotate: [0, 15, -15, 0],
+                                        filter: ['drop-shadow(0 0 10px gold)', 'drop-shadow(0 0 25px orange)', 'drop-shadow(0 0 10px gold)']
+                                    }}
+                                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                                     style={{
-                                        position: 'absolute', top: -25, right: -20,
-                                        fontSize: '2rem', filter: 'drop-shadow(0 0 10px gold)',
+                                        position: 'absolute', top: -35, right: -25,
+                                        fontSize: '3.5rem',
                                         zIndex: 800, pointerEvents: 'none'
                                     }}
                                     title="Veio à aula hoje!"
                                 >
-                                    ⭐
+                                    🌟
                                 </motion.div>
                             )}
                         </motion.div>
