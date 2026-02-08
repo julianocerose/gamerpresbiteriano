@@ -191,25 +191,46 @@ const AdminPanel = ({
                                                 <div>
                                                     <label style={{ fontSize: '0.75rem', opacity: 0.8, display: 'block', marginBottom: '5px' }}>ESTUDO</label>
                                                     <input
-                                                        type="number" value={student.score.estudo}
-                                                        onChange={e => updateStudent(student.id, { score: { ...student.score, estudo: parseInt(e.target.value) || 0 } })}
-                                                        style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '8px', borderRadius: '5px' }}
+                                                        type="number"
+                                                        defaultValue={student.score.estudo}
+                                                        onBlur={e => {
+                                                            const val = parseInt(e.target.value) || 0;
+                                                            if (val !== student.score.estudo) {
+                                                                updateStudent(student.id, { score: { ...student.score, estudo: val } });
+                                                            }
+                                                        }}
+                                                        style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '5px', outline: 'none' }}
+                                                        onFocus={(e) => e.target.style.borderColor = 'var(--p-gold)'}
                                                     />
                                                 </div>
                                                 <div>
                                                     <label style={{ fontSize: '0.75rem', opacity: 0.8, display: 'block', marginBottom: '5px' }}>LOUVOR</label>
                                                     <input
-                                                        type="number" value={student.score.louvor}
-                                                        onChange={e => updateStudent(student.id, { score: { ...student.score, louvor: parseInt(e.target.value) || 0 } })}
-                                                        style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '8px', borderRadius: '5px' }}
+                                                        type="number"
+                                                        defaultValue={student.score.louvor}
+                                                        onBlur={e => {
+                                                            const val = parseInt(e.target.value) || 0;
+                                                            if (val !== student.score.louvor) {
+                                                                updateStudent(student.id, { score: { ...student.score, louvor: val } });
+                                                            }
+                                                        }}
+                                                        style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '5px', outline: 'none' }}
+                                                        onFocus={(e) => e.target.style.borderColor = 'var(--p-gold)'}
                                                     />
                                                 </div>
                                                 <div>
                                                     <label style={{ fontSize: '0.75rem', opacity: 0.8, display: 'block', marginBottom: '5px' }}>ATIVIDADES</label>
                                                     <input
-                                                        type="number" value={student.score.atividades}
-                                                        onChange={e => updateStudent(student.id, { score: { ...student.score, atividades: parseInt(e.target.value) || 0 } })}
-                                                        style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '8px', borderRadius: '5px' }}
+                                                        type="number"
+                                                        defaultValue={student.score.atividades}
+                                                        onBlur={e => {
+                                                            const val = parseInt(e.target.value) || 0;
+                                                            if (val !== student.score.atividades) {
+                                                                updateStudent(student.id, { score: { ...student.score, atividades: val } });
+                                                            }
+                                                        }}
+                                                        style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '5px', outline: 'none' }}
+                                                        onFocus={(e) => e.target.style.borderColor = 'var(--p-gold)'}
                                                     />
                                                 </div>
                                                 <div style={{ gridColumn: 'span 3', textAlign: 'center' }}>
