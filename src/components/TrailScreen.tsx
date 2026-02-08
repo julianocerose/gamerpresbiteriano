@@ -339,19 +339,26 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                             {/* Self-Profile Edit Overlay */}
                             {user?.id === student.id && (
                                 <div
-                                    onClick={(e) => { e.stopPropagation(); document.getElementById('avatar-upload')?.click(); }}
+                                    onClick={(e) => { e.stopPropagation(); document.getElementById(`avatar-upload-${student.id}`)?.click(); }}
                                     style={{
-                                        position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)',
+                                        position: 'absolute', inset: 0,
+                                        background: isStudentActive ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.2)',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        opacity: isStudentActive ? 1 : 0, transition: 'opacity 0.3s'
+                                        opacity: isStudentActive ? 1 : 0.4,
+                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        backdropFilter: isStudentActive ? 'blur(2px)' : 'none'
                                     }}
                                 >
-                                    <span style={{ fontSize: '1.2rem' }}>📷</span>
+                                    <span style={{ fontSize: isStudentActive ? '1.5rem' : '1.1rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>📷</span>
                                     <input
-                                        id="avatar-upload" type="file" hidden accept="image/*"
+                                        id={`avatar-upload-${student.id}`} type="file" hidden accept="image/*"
                                         onChange={handlePhotoUpload}
                                     />
-                                    {isUploading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', color: 'white', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>SALVANDO...</div>}
+                                    {isUploading && (
+                                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', color: '#fff', fontSize: '0.55rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '5px' }}>
+                                            ENVIANDO...
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </motion.div>

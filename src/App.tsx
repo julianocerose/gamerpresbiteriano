@@ -46,7 +46,7 @@ export type Student = {
 }
 
 function App() {
-    const [user, setUser] = useState<{ type: 'admin' | 'student'; email: string } | null>(() => {
+    const [user, setUser] = useState<{ id?: string, type: 'admin' | 'student'; email: string } | null>(() => {
         const saved = localStorage.getItem('jornada_user');
         return saved ? JSON.parse(saved) : null;
     });
@@ -148,22 +148,24 @@ function App() {
             finalType = 'admin';
         }
 
-        const { data: existing } = await supabase.from('students').select('*').eq('email', email).single();
+        let { data: existing } = await supabase.from('students').select('*').eq('email', email).single();
 
         if (!existing && finalType === 'student') {
-            await supabase.from('students').insert([{
+            const { data: inserted } = await supabase.from('students').insert([{
                 name: name || 'Novo Explorador',
                 email,
                 status: 'pending',
                 score_estudo: 0,
                 score_louvor: 0,
                 score_atividades: 0
-            }]);
+            }]).select().single();
+            existing = inserted;
         } else if (existing && (email === 'admin@fe.com' || email === 'julianocerose@gmail.com')) {
             await supabase.from('students').update({ status: 'active' }).eq('id', existing.id);
         }
 
-        setUser({ type: finalType, email });
+        const userData = { id: existing?.id, type: finalType, email };
+        setUser(userData);
         setView(finalType === 'admin' ? 'admin' : 'trail');
 
         // Persist session
