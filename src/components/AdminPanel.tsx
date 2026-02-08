@@ -258,26 +258,85 @@ const AdminPanel = ({
 
                         <div style={{ display: 'grid', gap: '10px' }}>
                             {safeLessons.sort((a, b) => a.order - b.order).map((l, i) => (
-                                <div key={l?.id} className="game-card" style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                                    <div style={{ background: 'var(--p-gold)', color: 'black', width: '30px', height: '30px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem' }}>
+                                <div key={l?.id} className="game-card" style={{
+                                    display: 'flex', gap: '12px', alignItems: 'center',
+                                    background: 'rgba(10, 10, 15, 0.4)',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    padding: '12px 15px'
+                                }}>
+                                    <div style={{
+                                        background: 'var(--p-gold)', color: 'black',
+                                        width: '28px', height: '28px', minWidth: '28px',
+                                        borderRadius: '50%', display: 'flex', alignItems: 'center',
+                                        justifyContent: 'center', fontWeight: 'bold', fontSize: '0.75rem',
+                                        boxShadow: '0 0 10px rgba(212, 175, 55, 0.3)'
+                                    }}>
                                         {i + 1}
                                     </div>
-                                    <input
-                                        type="text" value={l.title}
-                                        onChange={e => updateLesson(l.id, { title: e.target.value })}
-                                        style={{ flex: 1, background: 'transparent', border: 'none', color: 'white', fontWeight: 'bold' }}
-                                    />
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+
+                                    <div style={{ flex: 1 }}>
+                                        <label style={{ fontSize: '0.6rem', opacity: 0.5, display: 'block', textTransform: 'uppercase' }}>Nome da Etapa</label>
                                         <input
-                                            type="number" value={l.requiredXP}
-                                            onChange={e => updateLesson(l.id, { requiredXP: parseInt(e.target.value) || 0 })}
-                                            style={{ width: '60px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#ffcc00', padding: '8px', borderRadius: '5px', textAlign: 'center', fontWeight: 'bold', fontSize: '1rem' }}
+                                            type="text"
+                                            defaultValue={l.title}
+                                            onBlur={e => {
+                                                if (e.target.value !== l.title) {
+                                                    updateLesson(l.id, { title: e.target.value });
+                                                }
+                                            }}
+                                            style={{
+                                                width: '100%',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                color: 'white',
+                                                fontWeight: 'bold',
+                                                padding: '8px',
+                                                borderRadius: '6px',
+                                                fontSize: '0.9rem',
+                                                outline: 'none'
+                                            }}
+                                            onFocus={(e) => e.target.style.borderColor = 'var(--p-gold)'}
                                         />
-                                        <span style={{ fontSize: '0.6rem', color: '#ffcc00' }}>XP</span>
                                     </div>
+
+                                    <div style={{ width: '80px' }}>
+                                        <label style={{ fontSize: '0.6rem', opacity: 0.5, display: 'block', textTransform: 'uppercase' }}>XP Req.</label>
+                                        <input
+                                            type="number"
+                                            defaultValue={l.requiredXP}
+                                            onBlur={e => {
+                                                const val = parseInt(e.target.value);
+                                                if (!isNaN(val) && val !== l.requiredXP) {
+                                                    updateLesson(l.id, { requiredXP: val });
+                                                }
+                                            }}
+                                            style={{
+                                                width: '100%',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                color: 'var(--p-gold)',
+                                                padding: '8px',
+                                                borderRadius: '6px',
+                                                textAlign: 'center',
+                                                fontWeight: 'bold',
+                                                fontSize: '1rem',
+                                                outline: 'none'
+                                            }}
+                                            onFocus={(e) => e.target.style.borderColor = 'var(--p-gold)'}
+                                        />
+                                    </div>
+
                                     <button
-                                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: 0.5 }}
-                                        onClick={() => deleteLesson(l.id)}
+                                        style={{
+                                            background: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.2)',
+                                            cursor: 'pointer', color: 'white', padding: '10px',
+                                            borderRadius: '8px', marginTop: '15px'
+                                        }}
+                                        onClick={() => {
+                                            if (confirm('Deseja realmente remover esta lição da trilha?')) {
+                                                deleteLesson(l.id);
+                                            }
+                                        }}
                                     >🗑️</button>
                                 </div>
                             ))}
@@ -286,84 +345,83 @@ const AdminPanel = ({
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <h2 style={{ fontSize: '1.2rem', borderLeft: '4px solid #339af0', paddingLeft: '10px' }}>MISSÕES DISPONÍVEIS</h2>
-                        <div className="game-card" style={{ background: 'rgba(255,255,255,0.05)' }}>
-                            <div style={{ display: 'grid', gap: '10px', marginBottom: '15px' }}>
+
+                        <div className="game-card" style={{ background: 'rgba(255,255,255,0.05)', border: '1px dashed #339af0' }}>
+                            <h4 style={{ fontSize: '0.8rem', marginBottom: '10px', opacity: 0.8 }}>+ NOVA MISSÃO</h4>
+                            <div style={{ display: 'grid', gap: '10px' }}>
                                 <div style={{ display: 'flex', gap: '10px' }}>
                                     <input
                                         type="text" placeholder="NOME DA MISSÃO" value={newMission.title}
                                         onChange={e => setNewMission({ ...newMission, title: e.target.value })}
-                                        style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '12px', borderRadius: '8px' }}
+                                        style={{ flex: 1, background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '10px', borderRadius: '8px' }}
                                     />
                                     <input
                                         type="number" placeholder="XP" value={newMission.xp}
                                         onChange={e => setNewMission({ ...newMission, xp: e.target.value })}
-                                        style={{ width: '80px', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '12px', borderRadius: '8px' }}
+                                        style={{ width: '70px', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '10px', borderRadius: '8px' }}
                                     />
                                 </div>
-                                <input
-                                    type="text" placeholder="DESCRIÇÃO DA MISSÃO (Ex: Ler João 3:16)" value={newMission.desc}
+                                <textarea
+                                    placeholder="DESCRIÇÃO (O que o aluno deve fazer?)" value={newMission.desc}
                                     onChange={e => setNewMission({ ...newMission, desc: e.target.value })}
-                                    style={{ background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '12px', borderRadius: '8px' }}
+                                    style={{ background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '10px', borderRadius: '8px', fontSize: '0.8rem', resize: 'none' }}
                                 />
-                                <select
-                                    style={{ background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '12px', borderRadius: '8px' }}
-                                    value={newMission.lessonId}
-                                    onChange={e => setNewMission({ ...newMission, lessonId: e.target.value })}
-                                >
-                                    <option value="">VINCULAR À LIÇÃO...</option>
-                                    {safeLessons.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
-                                </select>
-                                <button className="btn-3d" style={{ background: 'var(--primary)', color: 'white' }} onClick={() => {
+                                <button className="btn-3d" style={{ background: '#339af0', color: 'white' }} onClick={() => {
                                     if (newMission.title) {
                                         addMission({
-                                            id: 'M' + Date.now(),
-                                            title: newMission.title,
-                                            description: newMission.desc || 'Missão do reino',
-                                            rewardXP: parseInt(newMission.xp) || 10,
-                                            targetLessonId: newMission.lessonId || (safeLessons[0]?.id || '')
+                                            id: 'M' + Date.now(), title: newMission.title,
+                                            description: newMission.desc, rewardXP: parseInt(newMission.xp) || 10,
+                                            targetLessonId: ''
                                         });
                                         setNewMission({ title: '', desc: '', lessonId: '', xp: '10' });
                                     }
                                 }}>CRIAR MISSÃO</button>
                             </div>
+                        </div>
 
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {safeMissions.map(m => {
-                                    const linkedLesson = lessons.find(l => l.id === m.targetLessonId);
-                                    return (
-                                        <div key={m.id} className="game-card" style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255,255,255,0.05)' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <input
-                                                    type="text" value={m.title}
-                                                    onChange={e => updateMission(m.id, { title: e.target.value })}
-                                                    style={{ flex: 1, background: 'transparent', border: 'none', color: 'white', fontWeight: 'bold' }}
-                                                />
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                    <input
-                                                        type="number" value={m.rewardXP}
-                                                        onChange={e => updateMission(m.id, { rewardXP: parseInt(e.target.value) || 0 })}
-                                                        style={{ width: '60px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#ffcc00', padding: '8px', borderRadius: '5px', textAlign: 'center', fontWeight: 'bold', fontSize: '1rem' }}
-                                                    />
-                                                    <span style={{ fontSize: '0.6rem', color: '#ffcc00' }}>XP</span>
-                                                </div>
-                                                <button
-                                                    onClick={() => deleteMission(m.id)}
-                                                    style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: 0.5, marginLeft: '10px' }}
-                                                >🗑️</button>
-                                            </div>
-                                            <div style={{ fontSize: '0.7rem', color: 'var(--p-gold)', display: 'flex', justifyContent: 'space-between' }}>
-                                                <span>📍 VINCULADA A: {linkedLesson?.title || 'SEM LIÇÃO'}</span>
-                                                <input
-                                                    type="text"
-                                                    value={m.description}
-                                                    onChange={e => updateMission(m.id, { description: e.target.value })}
-                                                    style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.6)', textAlign: 'right', fontSize: '0.7rem' }}
-                                                />
-                                            </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {safeMissions.map(m => (
+                                <div key={m.id} className="game-card" style={{
+                                    background: 'rgba(10, 10, 15, 0.4)',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    padding: '12px 15px',
+                                    display: 'flex', flexDirection: 'column', gap: '10px'
+                                }}>
+                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ fontSize: '0.6rem', opacity: 0.5, textTransform: 'uppercase' }}>Título da Missão</label>
+                                            <input
+                                                type="text" defaultValue={m.title}
+                                                onBlur={e => updateMission(m.id, { title: e.target.value })}
+                                                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '8px', borderRadius: '6px', fontWeight: 'bold', fontSize: '0.85rem' }}
+                                                onFocus={(e) => e.target.style.borderColor = 'var(--p-gold)'}
+                                            />
                                         </div>
-                                    );
-                                })}
-                            </div>
+                                        <div style={{ width: '60px' }}>
+                                            <label style={{ fontSize: '0.6rem', opacity: 0.5, textTransform: 'uppercase' }}>XP</label>
+                                            <input
+                                                type="number" defaultValue={m.rewardXP}
+                                                onBlur={e => updateMission(m.id, { rewardXP: parseInt(e.target.value) || 0 })}
+                                                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--p-gold)', padding: '8px', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold' }}
+                                                onFocus={(e) => e.target.style.borderColor = 'var(--p-gold)'}
+                                            />
+                                        </div>
+                                        <button
+                                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: 0.5, marginTop: '15px' }}
+                                            onClick={() => { if (confirm('Excluir missão?')) deleteMission(m.id); }}
+                                        >🗑️</button>
+                                    </div>
+                                    <div>
+                                        <label style={{ fontSize: '0.6rem', opacity: 0.5, textTransform: 'uppercase' }}>Descrição da Missão</label>
+                                        <textarea
+                                            defaultValue={m.description}
+                                            onBlur={e => updateMission(m.id, { description: e.target.value })}
+                                            style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.8)', padding: '8px', borderRadius: '6px', fontSize: '0.75rem', resize: 'none' }}
+                                            onFocus={(e) => e.target.style.borderColor = 'var(--p-gold)'}
+                                        />
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
