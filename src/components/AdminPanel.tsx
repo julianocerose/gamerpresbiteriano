@@ -8,9 +8,13 @@ interface AdminPanelProps {
     updateStudent: (id: string, updates: Partial<Student>) => void;
     deleteStudent: (id: string) => void;
     lessons: Lesson[];
-    setLessons: (lessons: Lesson[]) => void;
+    addLesson: (lesson: Lesson) => void;
+    updateLesson: (id: string, updates: Partial<Lesson>) => void;
+    deleteLesson: (id: string) => void;
     missions: Mission[];
-    setMissions: (missions: Mission[]) => void;
+    addMission: (mission: Mission) => void;
+    updateMission: (id: string, updates: Partial<Mission>) => void;
+    deleteMission: (id: string) => void;
     proofs: Proof[];
     approveProof: (id: string) => void;
 }
@@ -21,9 +25,13 @@ const AdminPanel = ({
     updateStudent,
     deleteStudent,
     lessons = [],
-    setLessons,
+    addLesson,
+    updateLesson,
+    deleteLesson,
     missions = [],
-    setMissions,
+    addMission,
+    updateMission,
+    deleteMission,
     proofs = [],
     approveProof
 }: AdminPanelProps) => {
@@ -113,7 +121,7 @@ const AdminPanel = ({
                         {safeStudents.map(student => (
                             <div key={student?.id} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                 <div className="game-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
                                         <div
                                             onClick={() => document.getElementById(`photo-input-${student.id}`)?.click()}
                                             style={{
@@ -128,24 +136,36 @@ const AdminPanel = ({
                                             id={`photo-input-${student.id}`} type="file" accept="image/*" hidden
                                             onChange={(e) => handleFileChange(e, student.id)}
                                         />
-                                        <div>
-                                            <div style={{ fontWeight: 'bold' }}>{student?.name || 'Desconhecido'}</div>
-                                            <div style={{ fontSize: '0.6rem', opacity: 0.7 }}>{student?.email}</div>
-                                            <div style={{
-                                                fontSize: '0.6rem', padding: '2px 8px', borderRadius: '10px',
-                                                background: student?.status === 'active' ? '#40c057' : '#fa5252',
-                                                marginTop: '4px', display: 'inline-block', fontWeight: 'bold'
-                                            }}>
-                                                {(student?.status || 'pendente').toUpperCase()}
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                                            <input
+                                                type="text"
+                                                value={student.name}
+                                                onChange={e => updateStudent(student.id, { name: e.target.value })}
+                                                style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 'bold', fontSize: '1rem', width: '100%' }}
+                                            />
+                                            <input
+                                                type="email"
+                                                value={student.email}
+                                                onChange={e => updateStudent(student.id, { email: e.target.value })}
+                                                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', width: '100%' }}
+                                            />
+                                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                                <div style={{
+                                                    fontSize: '0.6rem', padding: '2px 8px', borderRadius: '10px',
+                                                    background: student?.status === 'active' ? '#40c057' : '#fa5252',
+                                                    display: 'inline-block', fontWeight: 'bold'
+                                                }}>
+                                                    {(student?.status || 'pendente').toUpperCase()}
+                                                </div>
+                                                {student?.status === 'pending' && (
+                                                    <button
+                                                        onClick={() => updateStudent(student.id, { status: 'active' })}
+                                                        style={{ padding: '2px 8px', borderRadius: '5px', background: 'var(--primary)', color: 'white', border: 'none', fontSize: '0.6rem', fontWeight: 'bold', cursor: 'pointer' }}
+                                                    >
+                                                        ✅ APROVAR
+                                                    </button>
+                                                )}
                                             </div>
-                                            {student?.status === 'pending' && (
-                                                <button
-                                                    onClick={() => updateStudent(student.id, { status: 'active' })}
-                                                    style={{ marginLeft: '10px', padding: '2px 8px', borderRadius: '5px', background: 'var(--primary)', color: 'white', border: 'none', fontSize: '0.6rem', fontWeight: 'bold', cursor: 'pointer' }}
-                                                >
-                                                    ✅ APROVAR
-                                                </button>
-                                            )}
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -208,7 +228,6 @@ const AdminPanel = ({
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         <h2 style={{ fontSize: '1.2rem', borderLeft: '4px solid var(--p-gold)', paddingLeft: '10px' }}>MAPA DA TRILHA (LIÇÕES)</h2>
 
-                        {/* ADICIONAR LIÇÃO */}
                         <div className="game-card" style={{ background: 'rgba(255,255,255,0.05)', border: '1px dashed var(--p-gold)' }}>
                             <h4 style={{ fontSize: '0.8rem', marginBottom: '10px', opacity: 0.8 }}>+ NOVA ETAPA NO MAPA</h4>
                             <div style={{ display: 'flex', gap: '10px' }}>
@@ -224,15 +243,13 @@ const AdminPanel = ({
                                 />
                                 <button className="btn-3d" style={{ background: 'var(--primary)', color: 'white' }} onClick={() => {
                                     if (newLesson.title) {
-                                        setLessons([...safeLessons, { id: 'L' + Date.now(), title: newLesson.title, order: safeLessons.length + 1, requiredXP: parseInt(newLesson.xp) }]);
+                                        addLesson({ id: 'L' + Date.now(), title: newLesson.title, order: safeLessons.length + 1, requiredXP: parseInt(newLesson.xp) });
                                         setNewLesson({ title: '', xp: '100' });
                                     }
                                 }}>+</button>
                             </div>
-                            <p style={{ fontSize: '0.6rem', marginTop: '10px', opacity: 0.6 }}>O XP define quanto o aluno precisa para CHEGAR nesta lição.</p>
                         </div>
 
-                        {/* LISTA DE LIÇÕES EDITÁVEL */}
                         <div style={{ display: 'grid', gap: '10px' }}>
                             {safeLessons.sort((a, b) => a.order - b.order).map((l, i) => (
                                 <div key={l?.id} className="game-card" style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
@@ -241,20 +258,20 @@ const AdminPanel = ({
                                     </div>
                                     <input
                                         type="text" value={l.title}
-                                        onChange={e => setLessons(safeLessons.map(sl => sl.id === l.id ? { ...sl, title: e.target.value } : sl))}
+                                        onChange={e => updateLesson(l.id, { title: e.target.value })}
                                         style={{ flex: 1, background: 'transparent', border: 'none', color: 'white', fontWeight: 'bold' }}
                                     />
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                         <input
                                             type="number" value={l.requiredXP}
-                                            onChange={e => setLessons(safeLessons.map(sl => sl.id === l.id ? { ...sl, requiredXP: parseInt(e.target.value) || 0 } : sl))}
+                                            onChange={e => updateLesson(l.id, { requiredXP: parseInt(e.target.value) || 0 })}
                                             style={{ width: '60px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--p-gold)', padding: '5px', borderRadius: '5px', textAlign: 'center', fontWeight: 'bold' }}
                                         />
                                         <span style={{ fontSize: '0.6rem' }}>XP</span>
                                     </div>
                                     <button
                                         style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: 0.5 }}
-                                        onClick={() => setLessons(safeLessons.filter(sl => sl.id !== l.id))}
+                                        onClick={() => deleteLesson(l.id)}
                                     >🗑️</button>
                                 </div>
                             ))}
@@ -292,13 +309,13 @@ const AdminPanel = ({
                                 </select>
                                 <button className="btn-3d" style={{ background: 'var(--primary)', color: 'white' }} onClick={() => {
                                     if (newMission.title) {
-                                        setMissions([...safeMissions, {
+                                        addMission({
                                             id: 'M' + Date.now(),
                                             title: newMission.title,
                                             description: newMission.desc || 'Missão do reino',
                                             rewardXP: parseInt(newMission.xp) || 10,
                                             targetLessonId: newMission.lessonId || (safeLessons[0]?.id || '')
-                                        }]);
+                                        });
                                         setNewMission({ title: '', desc: '', lessonId: '', xp: '10' });
                                     }
                                 }}>CRIAR MISSÃO</button>
@@ -312,25 +329,30 @@ const AdminPanel = ({
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                 <input
                                                     type="text" value={m.title}
-                                                    onChange={e => setMissions(missions.map(sm => sm.id === m.id ? { ...sm, title: e.target.value } : sm))}
+                                                    onChange={e => updateMission(m.id, { title: e.target.value })}
                                                     style={{ flex: 1, background: 'transparent', border: 'none', color: 'white', fontWeight: 'bold' }}
                                                 />
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                                                     <input
                                                         type="number" value={m.rewardXP}
-                                                        onChange={e => setMissions(missions.map(sm => sm.id === m.id ? { ...sm, rewardXP: parseInt(e.target.value) || 0 } : sm))}
+                                                        onChange={e => updateMission(m.id, { rewardXP: parseInt(e.target.value) || 0 })}
                                                         style={{ width: '60px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--p-gold)', padding: '5px', borderRadius: '5px', textAlign: 'center', fontWeight: 'bold' }}
                                                     />
                                                     <span style={{ fontSize: '0.6rem' }}>XP</span>
                                                 </div>
                                                 <button
-                                                    onClick={() => setMissions(missions.filter(sm => sm.id !== m.id))}
+                                                    onClick={() => deleteMission(m.id)}
                                                     style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: 0.5, marginLeft: '10px' }}
                                                 >🗑️</button>
                                             </div>
                                             <div style={{ fontSize: '0.7rem', color: 'var(--p-gold)', display: 'flex', justifyContent: 'space-between' }}>
                                                 <span>📍 VINCULADA A: {linkedLesson?.title || 'SEM LIÇÃO'}</span>
-                                                <span style={{ opacity: 0.6 }}>{m.description}</span>
+                                                <input
+                                                    type="text"
+                                                    value={m.description}
+                                                    onChange={e => updateMission(m.id, { description: e.target.value })}
+                                                    style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.6)', textAlign: 'right', fontSize: '0.7rem' }}
+                                                />
                                             </div>
                                         </div>
                                     );

@@ -1,12 +1,26 @@
 import { useState } from 'react';
 
 interface LoginScreenProps {
-    onLogin: (type: 'admin' | 'student', email: string) => void;
+    onLogin: (type: 'admin' | 'student', email: string, name?: string) => void;
 }
 
 const LoginScreen = ({ onLogin }: LoginScreenProps) => {
+    const [isAdminMode, setIsAdminMode] = useState(false);
+    const [adminUser, setAdminUser] = useState("");
+    const [adminPass, setAdminPass] = useState("");
+    const [error, setError] = useState("");
     const [studentName, setStudentName] = useState("");
     const [studentEmail, setStudentEmail] = useState("");
+
+    const handleAdminLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        // SECURE ADMIN CREDENTIALS (for prototype)
+        if (adminUser === "pastor" && adminPass === "fe2026") {
+            onLogin('admin', 'admin@fe.com');
+        } else {
+            setError("Usuário ou senha incorretos!");
+        }
+    };
 
     const handleGoogleMock = () => {
         // Simulated Google Login
