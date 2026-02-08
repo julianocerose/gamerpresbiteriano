@@ -92,21 +92,31 @@ function App() {
     }, [user, view, students, lessons, missions, proofs]);
 
     const handleLogin = (type: 'admin' | 'student', email: string, name?: string) => {
+        let finalType = type;
+        // Auto-detect admin by email
+        if (email === 'admin@fe.com' || email === 'julianocerose@gmail.com') {
+            finalType = 'admin';
+        }
+
         const exists = students.find(s => s.email === email);
-        if (!exists && type === 'student') {
+        if (!exists && finalType === 'student') {
             const newStudent: Student = {
                 id: Math.random().toString(36).substr(2, 9),
                 name: name || 'Novo Explorador',
                 email,
                 photo: null,
                 score: { estudo: 0, louvor: 0, atividades: 0 },
-                status: 'pending',
+                status: email === 'admin@fe.com' ? 'active' : 'pending',
                 completedMissions: []
             };
             setStudents(prev => [...prev, newStudent]);
+        } else if (exists && (email === 'admin@fe.com' || email === 'julianocerose@gmail.com')) {
+            // Ensure admin student is always active
+            updateStudent(exists.id, { status: 'active' });
         }
-        setUser({ type, email });
-        setView(type === 'admin' ? 'admin' : 'trail');
+
+        setUser({ type: finalType, email });
+        setView(finalType === 'admin' ? 'admin' : 'trail');
     };
 
     const addStudent = (newStudent: Omit<Student, 'id' | 'score' | 'completedMissions'>) => {

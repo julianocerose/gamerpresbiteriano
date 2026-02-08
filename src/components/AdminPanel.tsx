@@ -138,6 +138,14 @@ const AdminPanel = ({
                                             }}>
                                                 {(student?.status || 'pendente').toUpperCase()}
                                             </div>
+                                            {student?.status === 'pending' && (
+                                                <button
+                                                    onClick={() => updateStudent(student.id, { status: 'active' })}
+                                                    style={{ marginLeft: '10px', padding: '2px 8px', borderRadius: '5px', background: 'var(--primary)', color: 'white', border: 'none', fontSize: '0.6rem', fontWeight: 'bold', cursor: 'pointer' }}
+                                                >
+                                                    ✅ APROVAR
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
