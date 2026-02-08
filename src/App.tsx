@@ -323,6 +323,7 @@ function App() {
                     missions={missions}
                     user={user}
                     onCompleteMission={handleCompleteMission}
+                    onUpdateStudent={updateStudent}
                 />}
                 {view === 'admin' && <AdminPanel
                     students={students}

@@ -9,14 +9,30 @@ interface TrailScreenProps {
     missions: Mission[];
     user: any;
     onCompleteMission: (missionId: string, studentId: string) => void;
+    onUpdateStudent: (id: string, updates: Partial<Student>) => void;
 }
 
-const TrailScreen = ({ students, lessons, missions, user, onCompleteMission }: TrailScreenProps) => {
+const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onUpdateStudent }: TrailScreenProps) => {
     const sortedLessons = [...lessons].sort((a, b) => a.order - b.order);
     const [activeLessonId, setActiveLessonId] = useState<string | null>(null);
     const [activeStudentId, setActiveStudentId] = useState<string | null>(null);
     const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
     const [rewardToast, setRewardToast] = useState<{ xp: number, show: boolean }>({ xp: 0, show: false });
+    const [isUploading, setIsUploading] = useState(false);
+
+    const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !user?.id) return;
+
+        setIsUploading(true);
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            const base64String = reader.result as string;
+            await onUpdateStudent(user.id, { photo: base64String });
+            setIsUploading(false);
+        };
+        reader.readAsDataURL(file);
+    };
 
     // High-Precision "Trilha Pro" mapping (45 points) provided by the user
     const pathPoints = [
@@ -138,8 +154,8 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission }: T
                         position: 'absolute',
                         left: `${pos.x}%`,
                         top: `${pos.y}%`,
-                        transform: 'translate(-50%, -70%)',
-                        zIndex: 500,
+                        transform: 'translate(-50%, -100%)',
+                        zIndex: 200,
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center'
@@ -286,13 +302,13 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission }: T
                     <motion.div
                         key={student.id}
                         initial={false}
-                        animate={{ left: `${pos.x}%`, top: `${pos.y}%` }}
+                        animate={{ left: `${pos.x}%`, top: `${pos.y + 1}%` }}
                         transition={{ type: 'spring', stiffness: 50, damping: 15 }}
                         style={{
                             position: 'absolute',
                             width: '55px', height: '55px',
                             transform: 'translate(-50%, -50%)',
-                            zIndex: isStudentActive ? 700 : 600,
+                            zIndex: isStudentActive ? 700 : 150,
                             cursor: 'pointer'
                         }}
                         onClick={() => setActiveStudentId(isStudentActive ? null : student.id)}
@@ -319,6 +335,25 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission }: T
                                     <img src={student.photo} alt={student.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : '👤'}
                             </div>
+
+                            {/* Self-Profile Edit Overlay */}
+                            {user?.id === student.id && (
+                                <div
+                                    onClick={(e) => { e.stopPropagation(); document.getElementById('avatar-upload')?.click(); }}
+                                    style={{
+                                        position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        opacity: isStudentActive ? 1 : 0, transition: 'opacity 0.3s'
+                                    }}
+                                >
+                                    <span style={{ fontSize: '1.2rem' }}>📷</span>
+                                    <input
+                                        id="avatar-upload" type="file" hidden accept="image/*"
+                                        onChange={handlePhotoUpload}
+                                    />
+                                    {isUploading && <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.8)', color: 'white', fontSize: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>SALVANDO...</div>}
+                                </div>
+                            )}
                         </motion.div>
 
                         <AnimatePresence>
