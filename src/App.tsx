@@ -3,6 +3,7 @@ import TrailScreen from './components/TrailScreen'
 import AdminPanel from './components/AdminPanel'
 import LoginScreen from './components/LoginScreen'
 import MissionBoard from './components/MissionBoard'
+import { supabase } from './supabase'
 
 export type ScoreType = {
     estudo: number;
@@ -54,138 +55,206 @@ function App() {
         return (localStorage.getItem('jornada_view') as any) || 'trail';
     });
 
-    const [students, setStudents] = useState<Student[]>(() => {
-        const saved = localStorage.getItem('jornada_students');
-        return saved ? JSON.parse(saved) : [
-            { id: '1', name: 'Juliano Admin', email: 'admin@fe.com', photo: null, score: { estudo: 50, louvor: 50, atividades: 50 }, status: 'active', completedMissions: [] },
-        ];
-    });
+    const [students, setStudents] = useState<Student[]>([]);
+    const [lessons, setLessons] = useState<Lesson[]>([]);
+    const [missions, setMissions] = useState<Mission[]>([]);
+    const [proofs, setProofs] = useState<Proof[]>([]);
 
-    const [lessons, setLessons] = useState<Lesson[]>(() => {
-        const saved = localStorage.getItem('jornada_lessons');
-        return saved ? JSON.parse(saved) : [
-            { id: 'L1', title: 'Abertura', order: 1, requiredXP: 0 },
-            { id: 'L2', title: 'O Chamado', order: 2, requiredXP: 50 },
-        ];
-    });
+    // FETCH INITIAL DATA & SETUP REALTIME
+    useEffect(() => {
+        const fetchData = async () => {
+            const { data: st } = await supabase.from('students').select('*');
+            if (st) setStudents(st.map(s => ({
+                id: s.id,
+                name: s.name,
+                email: s.email,
+                photo: s.photo,
+                score: { estudo: s.score_estudo, louvor: s.score_louvor, atividades: s.score_atividades },
+                status: s.status,
+                completedMissions: s.completed_missions || []
+            })));
 
-    const [missions, setMissions] = useState<Mission[]>(() => {
-        const saved = localStorage.getItem('jornada_missions');
-        return saved ? JSON.parse(saved) : [
-            { id: 'M1', title: 'Primeiro Passo', description: 'Leia João 3:16 e envie uma foto.', rewardXP: 10, targetLessonId: 'L1' },
-        ];
-    });
+            const { data: ls } = await supabase.from('lessons').select('*').order('order', { ascending: true });
+            if (ls) setLessons(ls);
 
-    const [proofs, setProofs] = useState<Proof[]>(() => {
-        const saved = localStorage.getItem('jornada_proofs');
-        return saved ? JSON.parse(saved) : [];
-    });
+            const { data: ms } = await supabase.from('missions').select('*');
+            if (ms) setMissions(ms.map(m => ({
+                id: m.id,
+                title: m.title,
+                description: m.description,
+                rewardXP: m.reward_xp,
+                targetLessonId: m.target_lesson_id
+            })));
 
-    // PERSISTENCE
+            const { data: pr } = await supabase.from('proofs').select('*');
+            if (pr) setProofs(pr.map(p => ({
+                id: p.id,
+                studentId: p.student_id,
+                missionId: p.mission_id,
+                photo: p.photo,
+                status: p.status,
+                timestamp: new Date(p.timestamp).getTime()
+            })));
+        };
+
+        fetchData();
+
+        // REALTIME SUBSCRIPTIONS
+        const studentsSub = supabase.channel('students_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => fetchData())
+            .subscribe();
+
+        const lessonsSub = supabase.channel('lessons_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'lessons' }, () => fetchData())
+            .subscribe();
+
+        const missionsSub = supabase.channel('missions_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'missions' }, () => fetchData())
+            .subscribe();
+
+        const proofsSub = supabase.channel('proofs_channel')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'proofs' }, () => fetchData())
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(studentsSub);
+            supabase.removeChannel(lessonsSub);
+            supabase.removeChannel(missionsSub);
+            supabase.removeChannel(proofsSub);
+        };
+    }, []);
+
+    // PERSISTENCE (User only)
     useEffect(() => {
         localStorage.setItem('jornada_user', JSON.stringify(user));
         localStorage.setItem('jornada_view', view);
-        localStorage.setItem('jornada_students', JSON.stringify(students));
-        localStorage.setItem('jornada_lessons', JSON.stringify(lessons));
-        localStorage.setItem('jornada_missions', JSON.stringify(missions));
-        localStorage.setItem('jornada_proofs', JSON.stringify(proofs));
-    }, [user, view, students, lessons, missions, proofs]);
+    }, [user, view]);
 
-    const handleLogin = (type: 'admin' | 'student', email: string, name?: string) => {
+    const handleLogin = async (type: 'admin' | 'student', email: string, name?: string) => {
         let finalType = type;
-        // Auto-detect admin by email
         if (email === 'admin@fe.com' || email === 'julianocerose@gmail.com') {
             finalType = 'admin';
         }
 
-        const exists = students.find(s => s.email === email);
-        if (!exists && finalType === 'student') {
-            const newStudent: Student = {
-                id: Math.random().toString(36).substr(2, 9),
+        const { data: existing } = await supabase.from('students').select('*').eq('email', email).single();
+
+        if (!existing && finalType === 'student') {
+            await supabase.from('students').insert([{
                 name: name || 'Novo Explorador',
                 email,
-                photo: null,
-                score: { estudo: 0, louvor: 0, atividades: 0 },
-                status: email === 'admin@fe.com' ? 'active' : 'pending',
-                completedMissions: []
-            };
-            setStudents(prev => [...prev, newStudent]);
-        } else if (exists && (email === 'admin@fe.com' || email === 'julianocerose@gmail.com')) {
-            // Ensure admin student is always active
-            updateStudent(exists.id, { status: 'active' });
+                status: 'pending',
+                score_estudo: 0,
+                score_louvor: 0,
+                score_atividades: 0
+            }]);
+        } else if (existing && (email === 'admin@fe.com' || email === 'julianocerose@gmail.com')) {
+            await supabase.from('students').update({ status: 'active' }).eq('id', existing.id);
         }
 
         setUser({ type: finalType, email });
         setView(finalType === 'admin' ? 'admin' : 'trail');
     };
 
-    const addStudent = (newStudent: Omit<Student, 'id' | 'score' | 'completedMissions'>) => {
-        const student: Student = {
-            id: Math.random().toString(36).substr(2, 9),
+    const addStudent = async (newStudent: Omit<Student, 'id' | 'score' | 'completedMissions'>) => {
+        await supabase.from('students').insert([{
             name: newStudent.name,
             email: newStudent.email,
             photo: newStudent.photo || null,
-            score: { estudo: 0, louvor: 0, atividades: 0 },
             status: 'active',
-            completedMissions: []
-        };
-        setStudents(prev => [...prev, student]);
+            score_estudo: 0,
+            score_louvor: 0,
+            score_atividades: 0
+        }]);
     };
 
-    const updateStudent = (id: string, updates: Partial<Student>) => {
-        setStudents(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+    const updateStudent = async (id: string, updates: Partial<Student>) => {
+        const dbUpdates: any = {};
+        if (updates.name) dbUpdates.name = updates.name;
+        if (updates.status) dbUpdates.status = updates.status;
+        if (updates.photo) dbUpdates.photo = updates.photo;
+        if (updates.score) {
+            dbUpdates.score_estudo = updates.score.estudo;
+            dbUpdates.score_louvor = updates.score.louvor;
+            dbUpdates.score_atividades = updates.score.atividades;
+        }
+        if (updates.completedMissions) dbUpdates.completed_missions = updates.completedMissions;
+
+        await supabase.from('students').update(dbUpdates).eq('id', id);
     };
 
-    const deleteStudent = (id: string) => {
-        setStudents(prev => prev.filter(s => s.id !== id));
+    const deleteStudent = async (id: string) => {
+        await supabase.from('students').delete().eq('id', id);
     };
 
-
-    const handleCompleteMission = (missionId: string, studentId: string) => {
+    const handleCompleteMission = async (missionId: string, studentId: string) => {
+        const student = students.find(s => s.id === studentId);
         const mission = missions.find(m => m.id === missionId);
-        if (!mission) return;
+        if (!student || !mission) return;
 
-        setStudents(prev => prev.map(s => {
-            if (s.id === studentId) {
-                return {
-                    ...s,
-                    score: {
-                        ...s.score,
-                        atividades: s.score.atividades + mission.rewardXP
-                    }
-                };
-            }
-            return s;
-        }));
+        await supabase.from('students').update({
+            score_atividades: student.score.atividades + mission.rewardXP
+        }).eq('id', studentId);
     };
 
-    const addProof = (proof: Proof) => {
-        setProofs(prev => [...prev, proof]);
+    const addProof = async (proof: Proof) => {
+        await supabase.from('proofs').insert([{
+            student_id: proof.studentId,
+            mission_id: proof.missionId,
+            photo: proof.photo,
+            status: 'pending'
+        }]);
     };
 
-    const approveProof = (proofId: string) => {
+    const approveProof = async (proofId: string) => {
         const proof = proofs.find(p => p.id === proofId);
         if (!proof) return;
 
-        setProofs(prev => prev.map(p => p.id === proofId ? { ...p, status: 'approved' } : p));
-
         const mission = missions.find(m => m.id === proof.missionId);
-        if (mission) {
-            setStudents(prev => prev.map(s => s.id === proof.studentId ? {
-                ...s,
-                score: { ...s.score, atividades: s.score.atividades + mission.rewardXP },
-                completedMissions: [...s.completedMissions, mission.id]
-            } : s));
+        const student = students.find(s => s.id === proof.studentId);
+
+        if (mission && student) {
+            await supabase.from('students').update({
+                score_atividades: student.score.atividades + mission.rewardXP,
+                completed_missions: [...student.completedMissions, mission.id]
+            }).eq('id', student.id);
+
+            await supabase.from('proofs').update({ status: 'approved' }).eq('id', proofId);
         }
     };
 
+    // Helper for Admin Panel to update lessons/missions list (wrappers)
+    const setLessonsWrapper = async (newLessons: Lesson[]) => {
+        // Simple strategy: upsert
+        for (const l of newLessons) {
+            await supabase.from('lessons').upsert([{
+                id: l.id,
+                title: l.title,
+                order: l.order,
+                required_xp: l.requiredXP
+            }]);
+        }
+        // Deletion would need more logic, but this is a start
+    };
+
+    const setMissionsWrapper = async (newMissions: Mission[]) => {
+        for (const m of newMissions) {
+            await supabase.from('missions').upsert([{
+                id: m.id,
+                title: m.title,
+                description: m.description,
+                reward_xp: m.rewardXP,
+                target_lesson_id: m.targetLessonId
+            }]);
+        }
+    };
+
+    // Final UI Logic
     if (!user) {
         return <LoginScreen onLogin={handleLogin} />;
     }
 
     const currentStudent = students.find(s => s.email === user.email);
 
-    // Pending user check
     if (user.type === 'student' && currentStudent?.status === 'pending') {
         return (
             <div className="app-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', textAlign: 'center', background: 'var(--background)' }}>
@@ -237,9 +306,9 @@ function App() {
                     updateStudent={updateStudent}
                     deleteStudent={deleteStudent}
                     lessons={lessons}
-                    setLessons={setLessons}
+                    setLessons={setLessonsWrapper}
                     missions={missions}
-                    setMissions={setMissions}
+                    setMissions={setMissionsWrapper}
                     proofs={proofs}
                     approveProof={approveProof}
                 />}
