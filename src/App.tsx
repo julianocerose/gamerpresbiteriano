@@ -75,7 +75,12 @@ function App() {
             })));
 
             const { data: ls } = await supabase.from('lessons').select('*').order('order', { ascending: true });
-            if (ls) setLessons(ls);
+            if (ls) setLessons(ls.map(l => ({
+                id: l.id,
+                title: l.title,
+                order: l.order,
+                requiredXP: l.required_xp
+            })));
 
             const { data: ms } = await supabase.from('missions').select('*');
             if (ms) setMissions(ms.map(m => ({
@@ -170,6 +175,7 @@ function App() {
     const updateStudent = async (id: string, updates: Partial<Student>) => {
         const dbUpdates: any = {};
         if (updates.name) dbUpdates.name = updates.name;
+        if (updates.email) dbUpdates.email = updates.email;
         if (updates.status) dbUpdates.status = updates.status;
         if (updates.photo) dbUpdates.photo = updates.photo;
         if (updates.score) {

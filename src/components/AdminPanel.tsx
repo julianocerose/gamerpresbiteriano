@@ -265,9 +265,9 @@ const AdminPanel = ({
                                         <input
                                             type="number" value={l.requiredXP}
                                             onChange={e => updateLesson(l.id, { requiredXP: parseInt(e.target.value) || 0 })}
-                                            style={{ width: '60px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--p-gold)', padding: '5px', borderRadius: '5px', textAlign: 'center', fontWeight: 'bold' }}
+                                            style={{ width: '60px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#ffcc00', padding: '8px', borderRadius: '5px', textAlign: 'center', fontWeight: 'bold', fontSize: '1rem' }}
                                         />
-                                        <span style={{ fontSize: '0.6rem' }}>XP</span>
+                                        <span style={{ fontSize: '0.6rem', color: '#ffcc00' }}>XP</span>
                                     </div>
                                     <button
                                         style={{ background: 'transparent', border: 'none', cursor: 'pointer', opacity: 0.5 }}
@@ -336,9 +336,9 @@ const AdminPanel = ({
                                                     <input
                                                         type="number" value={m.rewardXP}
                                                         onChange={e => updateMission(m.id, { rewardXP: parseInt(e.target.value) || 0 })}
-                                                        style={{ width: '60px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'var(--p-gold)', padding: '5px', borderRadius: '5px', textAlign: 'center', fontWeight: 'bold' }}
+                                                        style={{ width: '60px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#ffcc00', padding: '8px', borderRadius: '5px', textAlign: 'center', fontWeight: 'bold', fontSize: '1rem' }}
                                                     />
-                                                    <span style={{ fontSize: '0.6rem' }}>XP</span>
+                                                    <span style={{ fontSize: '0.6rem', color: '#ffcc00' }}>XP</span>
                                                 </div>
                                                 <button
                                                     onClick={() => deleteMission(m.id)}
