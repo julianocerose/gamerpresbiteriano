@@ -14,6 +14,8 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
     const [studentName, setStudentName] = useState("");
     const [studentEmail, setStudentEmail] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const savedEmail = localStorage.getItem('jornada_user_email');
+    const savedName = localStorage.getItem('jornada_user_name') || 'Explorador';
 
     const handleAdminLogin = (e: React.FormEvent) => {
         e.preventDefault();
@@ -31,7 +33,13 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
     const handleGoogleMock = () => {
         setIsLoading(true);
         setTimeout(() => {
-            onLogin('student', studentEmail || 'aluno@gmail.com', studentName || 'Explorador');
+            const emailToUse = studentEmail || savedEmail || 'aluno@gmail.com';
+            const nameToUse = studentName || savedName || 'Explorador';
+
+            // Persist name for next time (email is persisted in App.tsx)
+            localStorage.setItem('jornada_user_name', nameToUse);
+
+            onLogin('student', emailToUse, nameToUse);
         }, 1200);
     };
 
@@ -112,7 +120,39 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
                 </p>
 
                 <AnimatePresence mode="wait">
-                    {!isAdminMode ? (
+                    {savedEmail && !isAdminMode ? (
+                        <motion.div
+                            key="welcome-back"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+                        >
+                            <h2 style={{ fontSize: '1.2rem', color: 'var(--p-gold)' }}>OLÁ, {savedName.toUpperCase()}! ⚔️</h2>
+                            <p style={{ opacity: 0.7, fontSize: '0.9rem' }}>Vimos que você já iniciou sua jornada. Pronto para continuar?</p>
+
+                            <button
+                                className="btn-3d"
+                                style={{
+                                    background: 'linear-gradient(135deg, #fff 0%, #e0e0e0 100%)',
+                                    color: '#1a1a1a', height: '60px'
+                                }}
+                                onClick={handleGoogleMock}
+                            >
+                                CONTINUAR AVENTURA
+                            </button>
+
+                            <button
+                                style={{ background: 'transparent', border: 'none', color: 'white', opacity: 0.4, fontSize: '0.7rem', textDecoration: 'underline' }}
+                                onClick={() => {
+                                    localStorage.removeItem('jornada_user_email');
+                                    localStorage.removeItem('jornada_user_name');
+                                    window.location.reload();
+                                }}
+                            >
+                                NÃO É VOCÊ? SAIR DO APARELHO
+                            </button>
+                        </motion.div>
+                    ) : !isAdminMode ? (
                         <motion.div
                             key="student"
                             initial={{ opacity: 0, x: -20 }}

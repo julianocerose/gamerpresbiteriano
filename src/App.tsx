@@ -104,6 +104,13 @@ function App() {
 
         fetchData();
 
+        // Auto-login check
+        const savedEmail = localStorage.getItem('jornada_user_email');
+        const savedType = localStorage.getItem('jornada_user_type') as 'admin' | 'student' | null;
+        if (savedEmail && savedType) {
+            handleLogin(savedType, savedEmail);
+        }
+
         // REALTIME SUBSCRIPTIONS
         const studentsSub = supabase.channel('students_channel')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'students' }, () => fetchData())
@@ -158,6 +165,10 @@ function App() {
 
         setUser({ type: finalType, email });
         setView(finalType === 'admin' ? 'admin' : 'trail');
+
+        // Persist session
+        localStorage.setItem('jornada_user_email', email);
+        localStorage.setItem('jornada_user_type', finalType);
     };
 
     const addStudent = async (newStudent: Omit<Student, 'id' | 'score' | 'completedMissions'>) => {
@@ -312,7 +323,11 @@ function App() {
                             {view === 'missions' ? '🗺️ VOLTAR TRILHA' : '📜 MISSÕES ATIVAS'}
                         </button>
                     )}
-                    <button className="btn-3d" style={{ background: '#444', padding: '8px 12px' }} onClick={() => setUser(null)}>🚪</button>
+                    <button className="btn-3d" style={{ background: '#444', padding: '8px 12px' }} onClick={() => {
+                        localStorage.removeItem('jornada_user_email');
+                        localStorage.removeItem('jornada_user_type');
+                        setUser(null);
+                    }}>🚪</button>
                 </div>
             </header>
 
