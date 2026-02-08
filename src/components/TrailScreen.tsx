@@ -263,7 +263,7 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                                 filter: 'drop-shadow(0 0 15px rgba(0,0,0,0.5)) sepia(0.6) contrast(1.1)',
                                 display: 'block'
                             }}>
-                                {isEnd ? '🏰' : '📖'}
+                                {isEnd ? '🏰' : (index === 0 && lesson.requiredXP === 0 ? '⛺' : '📖')}
                             </span>
                         </motion.div>
 
