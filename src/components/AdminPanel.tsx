@@ -322,7 +322,7 @@ const AdminPanel = ({
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                {missions.map(m => {
+                                {safeMissions.map(m => {
                                     const linkedLesson = lessons.find(l => l.id === m.targetLessonId);
                                     return (
                                         <div key={m.id} className="game-card" style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255,255,255,0.05)' }}>
