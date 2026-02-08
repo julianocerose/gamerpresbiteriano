@@ -222,30 +222,48 @@ function App() {
         }
     };
 
-    // Helper for Admin Panel to update lessons/missions list (wrappers)
-    const setLessonsWrapper = async (newLessons: Lesson[]) => {
-        // Simple strategy: upsert
-        for (const l of newLessons) {
-            await supabase.from('lessons').upsert([{
-                id: l.id,
-                title: l.title,
-                order: l.order,
-                required_xp: l.requiredXP
-            }]);
-        }
-        // Deletion would need more logic, but this is a start
+    const updateLesson = async (id: string, updates: Partial<Lesson>) => {
+        const dbUpdates: any = {};
+        if (updates.title) dbUpdates.title = updates.title;
+        if (updates.order !== undefined) dbUpdates.order = updates.order;
+        if (updates.requiredXP !== undefined) dbUpdates.required_xp = updates.requiredXP;
+        await supabase.from('lessons').update(dbUpdates).eq('id', id);
     };
 
-    const setMissionsWrapper = async (newMissions: Mission[]) => {
-        for (const m of newMissions) {
-            await supabase.from('missions').upsert([{
-                id: m.id,
-                title: m.title,
-                description: m.description,
-                reward_xp: m.rewardXP,
-                target_lesson_id: m.targetLessonId
-            }]);
-        }
+    const deleteLesson = async (id: string) => {
+        await supabase.from('lessons').delete().eq('id', id);
+    };
+
+    const addLesson = async (lesson: Lesson) => {
+        await supabase.from('lessons').insert([{
+            id: lesson.id,
+            title: lesson.title,
+            order: lesson.order,
+            required_xp: lesson.requiredXP
+        }]);
+    };
+
+    const updateMission = async (id: string, updates: Partial<Mission>) => {
+        const dbUpdates: any = {};
+        if (updates.title) dbUpdates.title = updates.title;
+        if (updates.description) dbUpdates.description = updates.description;
+        if (updates.rewardXP !== undefined) dbUpdates.reward_xp = updates.rewardXP;
+        if (updates.targetLessonId) dbUpdates.target_lesson_id = updates.targetLessonId;
+        await supabase.from('missions').update(dbUpdates).eq('id', id);
+    };
+
+    const deleteMission = async (id: string) => {
+        await supabase.from('missions').delete().eq('id', id);
+    };
+
+    const addMission = async (mission: Mission) => {
+        await supabase.from('missions').insert([{
+            id: mission.id,
+            title: mission.title,
+            description: mission.description,
+            reward_xp: mission.rewardXP,
+            target_lesson_id: mission.targetLessonId
+        }]);
     };
 
     // Final UI Logic
@@ -306,9 +324,13 @@ function App() {
                     updateStudent={updateStudent}
                     deleteStudent={deleteStudent}
                     lessons={lessons}
-                    setLessons={setLessonsWrapper}
+                    addLesson={addLesson}
+                    updateLesson={updateLesson}
+                    deleteLesson={deleteLesson}
                     missions={missions}
-                    setMissions={setMissionsWrapper}
+                    addMission={addMission}
+                    updateMission={updateMission}
+                    deleteMission={deleteMission}
                     proofs={proofs}
                     approveProof={approveProof}
                 />}

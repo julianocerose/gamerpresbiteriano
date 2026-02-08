@@ -5,24 +5,12 @@ interface LoginScreenProps {
 }
 
 const LoginScreen = ({ onLogin }: LoginScreenProps) => {
-    const [isAdminMode, setIsAdminMode] = useState(false);
-    const [adminUser, setAdminUser] = useState("");
-    const [adminPass, setAdminPass] = useState("");
-    const [error, setError] = useState("");
-
-    const handleAdminLogin = (e: React.FormEvent) => {
-        e.preventDefault();
-        // SECURE ADMIN CREDENTIALS (for prototype)
-        if (adminUser === "pastor" && adminPass === "fe2026") {
-            onLogin('admin', 'admin@fe.com');
-        } else {
-            setError("Usuário ou senha incorretos!");
-        }
-    };
+    const [studentName, setStudentName] = useState("");
+    const [studentEmail, setStudentEmail] = useState("");
 
     const handleGoogleMock = () => {
         // Simulated Google Login
-        onLogin('student', 'aluno@gmail.com');
+        onLogin('student', studentEmail || 'aluno@gmail.com', studentName || 'Explorador');
     };
 
     return (
@@ -39,10 +27,27 @@ const LoginScreen = ({ onLogin }: LoginScreenProps) => {
                 <p style={{ opacity: 0.8, fontSize: '0.9rem', marginBottom: '30px', fontWeight: 'bold' }}>ESCOLHA SEU PORTAL</p>
 
                 {!isAdminMode ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <h2 style={{ fontSize: '1.2rem', color: 'var(--primary)' }}>ENTRADA DO EXPLORADOR</h2>
+                        <input
+                            type="text"
+                            placeholder="SEU NOME"
+                            value={studentName}
+                            onChange={(e) => setStudentName(e.target.value)}
+                            className="white-card"
+                            style={{ width: '100%', border: 'none', padding: '12px', fontSize: '1rem', color: '#333' }}
+                        />
+                        <input
+                            type="email"
+                            placeholder="SEU EMAIL"
+                            value={studentEmail}
+                            onChange={(e) => setStudentEmail(e.target.value)}
+                            className="white-card"
+                            style={{ width: '100%', border: 'none', padding: '12px', fontSize: '1rem', color: '#333' }}
+                        />
                         <button className="btn-3d" style={{ background: '#fff', color: '#333' }} onClick={handleGoogleMock}>
                             <img src="https://www.google.com/favicon.ico" style={{ width: '20px' }} />
-                            LOGAR COM GOOGLE
+                            LOGAR COM GOOGLE (MOCK)
                         </button>
                         <div style={{ margin: '10px 0', fontSize: '0.8rem', opacity: 0.6 }}>OU</div>
                         <button className="btn-3d btn-secondary" onClick={() => setIsAdminMode(true)}>
