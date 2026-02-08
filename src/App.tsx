@@ -43,6 +43,7 @@ export type Student = {
     score: ScoreType;
     status: 'pending' | 'active';
     completedMissions: string[];
+    attendance: string[]; // List of dates 'YYYY-MM-DD'
 }
 
 function App() {
@@ -71,7 +72,8 @@ function App() {
                 photo: s.photo,
                 score: { estudo: s.score_estudo, louvor: s.score_louvor, atividades: s.score_atividades },
                 status: s.status,
-                completedMissions: s.completed_missions || []
+                completedMissions: s.completed_missions || [],
+                attendance: s.attendance || []
             })));
 
             const { data: ls } = await supabase.from('lessons').select('*').order('order', { ascending: true });

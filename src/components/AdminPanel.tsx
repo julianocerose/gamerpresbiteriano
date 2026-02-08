@@ -42,6 +42,7 @@ const AdminPanel = ({
     const [newLesson, setNewLesson] = useState({ title: '', xp: '50' });
     const [newMission, setNewMission] = useState({ title: '', desc: '', lessonId: '', xp: '10' });
     const [editingGrades, setEditingGrades] = useState<string | null>(null);
+    const [editingAttendance, setEditingAttendance] = useState<string | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, studentId?: string) => {
         const file = e.target.files?.[0];
@@ -178,6 +179,9 @@ const AdminPanel = ({
                                             <button className="btn-3d" style={{ fontSize: '0.7rem', padding: '8px 12px' }} onClick={() => setEditingGrades(editingGrades === student.id ? null : student.id)}>
                                                 📊 NOTAS
                                             </button>
+                                            <button className="btn-3d" style={{ fontSize: '0.7rem', padding: '8px 12px', background: '#e03131' }} onClick={() => setEditingAttendance(editingAttendance === student.id ? null : student.id)}>
+                                                📅 CHAMADA
+                                            </button>
                                             <div className="game-card" style={{ padding: '5px 10px', fontSize: '0.8rem', background: 'var(--p-gold)', color: 'black', fontWeight: 'bold' }}>
                                                 {(student?.score?.estudo || 0) + (student?.score?.louvor || 0) + (student?.score?.atividades || 0)} XP
                                             </div>
@@ -240,6 +244,54 @@ const AdminPanel = ({
                                                     >
                                                         📷 ALTERAR FOTO DO ALUNO
                                                     </button>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    )}
+
+                                    {editingAttendance === student.id && (
+                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="game-card" style={{ background: 'rgba(255,255,255,0.05)', marginTop: '-5px', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <h4 style={{ fontSize: '0.9rem', margin: 0 }}>DIÁRIO DE PRESENÇA</h4>
+                                                    <button
+                                                        className="btn-3d"
+                                                        style={{ background: 'var(--primary)', color: 'white', fontSize: '0.7rem', padding: '5px 10px' }}
+                                                        onClick={() => {
+                                                            const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+                                                            if (!student.attendance?.includes(today)) {
+                                                                const newAttendance = [...(student.attendance || []), today];
+                                                                updateStudent(student.id, { attendance: newAttendance });
+                                                            } else {
+                                                                alert('Aluno já tem presença marcada hoje!');
+                                                            }
+                                                        }}
+                                                    >
+                                                        + MARCAR HOJE ({new Date().toLocaleDateString('pt-BR')})
+                                                    </button>
+                                                </div>
+
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                    {(student.attendance || []).sort().reverse().map(date => (
+                                                        <div key={date} style={{
+                                                            background: 'rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '5px',
+                                                            fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: '8px'
+                                                        }}>
+                                                            <span>📅 {new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+                                                            <button
+                                                                style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontWeight: 'bold' }}
+                                                                onClick={() => {
+                                                                    if (confirm(`Remover presença de ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')}?`)) {
+                                                                        const newAttendance = student.attendance.filter(d => d !== date);
+                                                                        updateStudent(student.id, { attendance: newAttendance });
+                                                                    }
+                                                                }}
+                                                            >✕</button>
+                                                        </div>
+                                                    ))}
+                                                    {(student.attendance || []).length === 0 && (
+                                                        <span style={{ opacity: 0.5, fontSize: '0.8rem', fontStyle: 'italic' }}>Nenhuma presença registrada.</span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </motion.div>
