@@ -199,6 +199,7 @@ function App() {
             dbUpdates.score_atividades = updates.score.atividades;
         }
         if (updates.completedMissions) dbUpdates.completed_missions = updates.completedMissions;
+        if (updates.attendance) dbUpdates.attendance = updates.attendance;
 
         await supabase.from('students').update(dbUpdates).eq('id', id);
     };
