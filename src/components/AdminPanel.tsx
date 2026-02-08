@@ -118,107 +118,113 @@ const AdminPanel = ({
                     </div>
 
                     <div style={{ display: 'grid', gap: '10px' }}>
-                        {safeStudents.map(student => (
-                            <div key={student?.id} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                <div className="game-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
-                                        <div
-                                            onClick={() => document.getElementById(`photo-input-${student.id}`)?.click()}
-                                            style={{
-                                                width: '50px', height: '50px', borderRadius: '50%', background: '#eee',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem',
-                                                overflow: 'hidden', border: '2px solid white', cursor: 'pointer'
-                                            }}
-                                        >
-                                            {student?.photo ? <img src={student.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '👤'}
-                                        </div>
-                                        <input
-                                            id={`photo-input-${student.id}`} type="file" accept="image/*" hidden
-                                            onChange={(e) => handleFileChange(e, student.id)}
-                                        />
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                        {safeStudents
+                            .sort((a, b) => {
+                                if (a.status === 'pending' && b.status !== 'pending') return -1;
+                                if (a.status !== 'pending' && b.status === 'pending') return 1;
+                                return (a.name || '').localeCompare(b.name || '');
+                            })
+                            .map(student => (
+                                <div key={student?.id} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <div className="game-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1 }}>
+                                            <div
+                                                onClick={() => document.getElementById(`photo-input-${student.id}`)?.click()}
+                                                style={{
+                                                    width: '50px', height: '50px', borderRadius: '50%', background: '#eee',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem',
+                                                    overflow: 'hidden', border: '2px solid white', cursor: 'pointer'
+                                                }}
+                                            >
+                                                {student?.photo ? <img src={student.photo} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '👤'}
+                                            </div>
                                             <input
-                                                type="text"
-                                                value={student.name}
-                                                onChange={e => updateStudent(student.id, { name: e.target.value })}
-                                                style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 'bold', fontSize: '1rem', width: '100%' }}
+                                                id={`photo-input-${student.id}`} type="file" accept="image/*" hidden
+                                                onChange={(e) => handleFileChange(e, student.id)}
                                             />
-                                            <input
-                                                type="email"
-                                                value={student.email}
-                                                onChange={e => updateStudent(student.id, { email: e.target.value })}
-                                                style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', width: '100%' }}
-                                            />
-                                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                                <div style={{
-                                                    fontSize: '0.6rem', padding: '2px 8px', borderRadius: '10px',
-                                                    background: student?.status === 'active' ? '#40c057' : '#fa5252',
-                                                    display: 'inline-block', fontWeight: 'bold'
-                                                }}>
-                                                    {(student?.status || 'pendente').toUpperCase()}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1 }}>
+                                                <input
+                                                    type="text"
+                                                    value={student.name}
+                                                    onChange={e => updateStudent(student.id, { name: e.target.value })}
+                                                    style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: 'bold', fontSize: '1rem', width: '100%' }}
+                                                />
+                                                <input
+                                                    type="email"
+                                                    value={student.email}
+                                                    onChange={e => updateStudent(student.id, { email: e.target.value })}
+                                                    style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontSize: '0.8rem', width: '100%' }}
+                                                />
+                                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                                    <div style={{
+                                                        fontSize: '0.6rem', padding: '2px 8px', borderRadius: '10px',
+                                                        background: student?.status === 'active' ? '#40c057' : '#fa5252',
+                                                        display: 'inline-block', fontWeight: 'bold'
+                                                    }}>
+                                                        {(student?.status || 'pendente').toUpperCase()}
+                                                    </div>
+                                                    {student?.status === 'pending' && (
+                                                        <button
+                                                            onClick={() => updateStudent(student.id, { status: 'active' })}
+                                                            style={{ padding: '2px 8px', borderRadius: '5px', background: 'var(--primary)', color: 'white', border: 'none', fontSize: '0.6rem', fontWeight: 'bold', cursor: 'pointer' }}
+                                                        >
+                                                            ✅ APROVAR
+                                                        </button>
+                                                    )}
                                                 </div>
-                                                {student?.status === 'pending' && (
-                                                    <button
-                                                        onClick={() => updateStudent(student.id, { status: 'active' })}
-                                                        style={{ padding: '2px 8px', borderRadius: '5px', background: 'var(--primary)', color: 'white', border: 'none', fontSize: '0.6rem', fontWeight: 'bold', cursor: 'pointer' }}
-                                                    >
-                                                        ✅ APROVAR
-                                                    </button>
-                                                )}
                                             </div>
                                         </div>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                        <button className="btn-3d" style={{ fontSize: '0.7rem', padding: '8px 12px' }} onClick={() => setEditingGrades(editingGrades === student.id ? null : student.id)}>
-                                            📊 NOTAS
-                                        </button>
-                                        <div className="game-card" style={{ padding: '5px 10px', fontSize: '0.8rem', background: 'var(--p-gold)', color: 'black', fontWeight: 'bold' }}>
-                                            {(student?.score?.estudo || 0) + (student?.score?.louvor || 0) + (student?.score?.atividades || 0)} XP
+                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                            <button className="btn-3d" style={{ fontSize: '0.7rem', padding: '8px 12px' }} onClick={() => setEditingGrades(editingGrades === student.id ? null : student.id)}>
+                                                📊 NOTAS
+                                            </button>
+                                            <div className="game-card" style={{ padding: '5px 10px', fontSize: '0.8rem', background: 'var(--p-gold)', color: 'black', fontWeight: 'bold' }}>
+                                                {(student?.score?.estudo || 0) + (student?.score?.louvor || 0) + (student?.score?.atividades || 0)} XP
+                                            </div>
+                                            <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }} onClick={() => deleteStudent(student.id)}>🗑️</button>
                                         </div>
-                                        <button style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }} onClick={() => deleteStudent(student.id)}>🗑️</button>
                                     </div>
-                                </div>
 
-                                {editingGrades === student.id && (
-                                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="game-card" style={{ background: 'rgba(255,255,255,0.05)', marginTop: '-5px', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
-                                            <div>
-                                                <label style={{ fontSize: '0.75rem', opacity: 0.8, display: 'block', marginBottom: '5px' }}>ESTUDO</label>
-                                                <input
-                                                    type="number" value={student.score.estudo}
-                                                    onChange={e => updateStudent(student.id, { score: { ...student.score, estudo: parseInt(e.target.value) || 0 } })}
-                                                    style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '8px', borderRadius: '5px' }}
-                                                />
+                                    {editingGrades === student.id && (
+                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="game-card" style={{ background: 'rgba(255,255,255,0.05)', marginTop: '-5px', borderTopLeftRadius: 0, borderTopRightRadius: 0 }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px' }}>
+                                                <div>
+                                                    <label style={{ fontSize: '0.75rem', opacity: 0.8, display: 'block', marginBottom: '5px' }}>ESTUDO</label>
+                                                    <input
+                                                        type="number" value={student.score.estudo}
+                                                        onChange={e => updateStudent(student.id, { score: { ...student.score, estudo: parseInt(e.target.value) || 0 } })}
+                                                        style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '8px', borderRadius: '5px' }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label style={{ fontSize: '0.75rem', opacity: 0.8, display: 'block', marginBottom: '5px' }}>LOUVOR</label>
+                                                    <input
+                                                        type="number" value={student.score.louvor}
+                                                        onChange={e => updateStudent(student.id, { score: { ...student.score, louvor: parseInt(e.target.value) || 0 } })}
+                                                        style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '8px', borderRadius: '5px' }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label style={{ fontSize: '0.75rem', opacity: 0.8, display: 'block', marginBottom: '5px' }}>ATIVIDADES</label>
+                                                    <input
+                                                        type="number" value={student.score.atividades}
+                                                        onChange={e => updateStudent(student.id, { score: { ...student.score, atividades: parseInt(e.target.value) || 0 } })}
+                                                        style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '8px', borderRadius: '5px' }}
+                                                    />
+                                                </div>
+                                                <div style={{ gridColumn: 'span 3', textAlign: 'center' }}>
+                                                    <button
+                                                        onClick={() => document.getElementById(`photo-input-${student.id}`)?.click()}
+                                                        className="btn-3d" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', fontSize: '0.7rem' }}
+                                                    >
+                                                        📷 ALTERAR FOTO DO ALUNO
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <label style={{ fontSize: '0.75rem', opacity: 0.8, display: 'block', marginBottom: '5px' }}>LOUVOR</label>
-                                                <input
-                                                    type="number" value={student.score.louvor}
-                                                    onChange={e => updateStudent(student.id, { score: { ...student.score, louvor: parseInt(e.target.value) || 0 } })}
-                                                    style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '8px', borderRadius: '5px' }}
-                                                />
-                                            </div>
-                                            <div>
-                                                <label style={{ fontSize: '0.75rem', opacity: 0.8, display: 'block', marginBottom: '5px' }}>ATIVIDADES</label>
-                                                <input
-                                                    type="number" value={student.score.atividades}
-                                                    onChange={e => updateStudent(student.id, { score: { ...student.score, atividades: parseInt(e.target.value) || 0 } })}
-                                                    style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: 'none', color: 'white', padding: '8px', borderRadius: '5px' }}
-                                                />
-                                            </div>
-                                            <div style={{ gridColumn: 'span 3', textAlign: 'center' }}>
-                                                <button
-                                                    onClick={() => document.getElementById(`photo-input-${student.id}`)?.click()}
-                                                    className="btn-3d" style={{ background: 'rgba(255,255,255,0.1)', color: 'white', fontSize: '0.7rem' }}
-                                                >
-                                                    📷 ALTERAR FOTO DO ALUNO
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </div>
-                        ))}
+                                        </motion.div>
+                                    )}
+                                </div>
+                            ))}
                     </div>
                 </div>
             )}
