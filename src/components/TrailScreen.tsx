@@ -31,21 +31,15 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
     // Master Scale & Centering Logic (Optimizado para Telas Altas)
     const baseW = 1000;
     const baseH = 800;
-    const trailWidthRef = 780; // Larger reference to bring icons more "inward"
     const trailCenterX = 15; // The horizontal center of the path data
 
     const isVertical = viewportSize.height > viewportSize.width;
 
-    // Scale calculation:
-    let scaleX, scaleY;
-    if (isVertical) {
-        // Mobile portrait: stretch vertical to use more height
-        scaleX = viewportSize.width / trailWidthRef;
-        scaleY = scaleX * 1.55; // Increased vertical stretch factor (+20% from previous)
-    } else {
-        // Desktop/Horizontal: maintain proportions (cover)
-        scaleX = scaleY = Math.max(viewportSize.width / baseW, viewportSize.height / baseH);
-    }
+    // Master Scale for Background (Uniforme para evitar distorção)
+    const stageScale = Math.max(viewportSize.width / baseW, viewportSize.height / baseH);
+
+    // Multiplicador vertical apenas para as lições (Otimizado para Celas Altas)
+    const verticalStretch = isVertical ? 1.85 : 1.0;
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -63,7 +57,8 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
 
     const getPosition = (totalXP: number) => {
         const { x, y } = getTrailPosition(totalXP);
-        return { x: x * baseW, y: y * baseH };
+        // Aplicamos o esticamento apenas no eixo Y das lições/avatares
+        return { x: x * baseW, y: y * baseH * verticalStretch };
     };
 
     const getAdjustedPosition = (student: Student) => {
@@ -110,7 +105,7 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                 left: `calc(50% - ${trailCenterX}px)`,
                 width: `${baseW}px`,
                 height: `${baseH}px`,
-                transform: `translate(-50%, -50%) scale(${scaleX}, ${scaleY})`,
+                transform: `translate(-50%, -50%) scale(${stageScale})`,
                 transformOrigin: 'center center',
                 pointerEvents: 'none',
                 // Debug: border: '2px solid red'
