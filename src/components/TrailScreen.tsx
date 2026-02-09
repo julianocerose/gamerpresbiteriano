@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Student, Lesson, Mission } from '../App';
 import MaiAAssistant from './MaiAAssistant';
+import { PATH_DATA } from '../utils/pathData';
 
 interface TrailScreenProps {
     students: Student[];
@@ -34,117 +35,25 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
         reader.readAsDataURL(file);
     };
 
-    // High-Precision "Trilha Pro" mapping (45 points) provided by the user
-    const pathPoints = [
-        // --- TRECHO 1: ENTRADA E SUBIDA INICIAL (AJUSTADO: MAIS PARA CIMA) ---
-        { x: 42.0, y: 92.0 }, { x: 39.5, y: 89.0 }, { x: 36.8, y: 86.0 },
-        { x: 33.5, y: 82.0 }, { x: 31.2, y: 78.5 }, { x: 29.5, y: 75.0 },
-
-        // --- TRECHO 2: PRIMEIRA CURVA (PARA A DIREITA) ---
-        { x: 29.8, y: 72.0 }, { x: 31.5, y: 69.5 }, { x: 34.0, y: 67.0 },
-        { x: 38.0, y: 65.0 }, { x: 43.0, y: 63.5 }, { x: 48.5, y: 62.2 },
-        { x: 54.0, y: 61.0 }, { x: 60.0, y: 59.5 }, { x: 65.5, y: 57.8 },
-        { x: 70.0, y: 55.5 }, { x: 73.5, y: 52.5 }, { x: 74.8, y: 49.0 },
-
-        // --- TRECHO 3: RETORNO CENTRAL (SENTIDO ESQUERDA) ---
-        { x: 73.2, y: 46.0 }, { x: 69.5, y: 44.0 }, { x: 65.0, y: 43.0 },
-        { x: 60.0, y: 42.0 }, { x: 55.0, y: 41.5 }, { x: 50.0, y: 41.0 },
-        { x: 45.0, y: 40.5 }, { x: 40.0, y: 39.8 }, { x: 35.0, y: 38.8 },
-        { x: 30.5, y: 37.5 }, { x: 26.8, y: 35.5 }, { x: 24.5, y: 32.5 },
-
-        // --- TRECHO 4: CURVA FINAL E SUBIDA AO CASTELO ---
-        { x: 24.0, y: 29.0 }, { x: 25.5, y: 26.0 }, { x: 28.5, y: 23.5 },
-        { x: 32.5, y: 22.0 }, { x: 37.0, y: 20.8 }, { x: 42.0, y: 19.5 },
-        { x: 47.0, y: 18.0 }, { x: 52.0, y: 16.8 }, { x: 57.0, y: 15.0 },
-        { x: 61.5, y: 13.0 }, { x: 64.0, y: 10.5 }, { x: 63.5, y: 8.0 },
-        { x: 60.0, y: 6.0 }, { x: 55.0, y: 5.5 }, { x: 51.5, y: 4.0 }
-    ];
-
     const getPosition = (totalXP: number) => {
-        if (sortedLessons.length === 0) return pathPoints[0] || { x: 50, y: 50 };
-
-        const numLessons = sortedLessons.length;
-        const totalPathSegments = pathPoints.length - 1;
-
-        // Encontrar em qual segmento de lição o aluno está
-        // Segmento i é o espaço entre Lição i e Lição i+1
-        let lessonIdx = -1;
-        for (let i = 0; i < numLessons - 1; i++) {
-            if (totalXP < sortedLessons[i + 1].requiredXP) {
-                lessonIdx = i;
-                break;
-            }
-        }
-
-        // Determinar a posição no caminho (index no pathPoints) para cada lição
-        // Lição 1 (index 0) fica em 0%
-        // Lição N (index numLessons-1) fica em (numLessons-1)/numLessons * totalPathSegments
-        // O Castelo fica em 1.0 * totalPathSegments
-        const getLessonPathPos = (idx: number) => (idx / numLessons) * totalPathSegments;
-
-        if (lessonIdx === -1) {
-            // O aluno passou de todas as lições ou está a caminho do último marco (Castelo)
-            const startIdx = numLessons - 1;
-            const startPathPos = getLessonPathPos(startIdx);
-            const endPathPos = totalPathSegments;
-
-            const startXP = sortedLessons[startIdx].requiredXP;
-            // Para o trecho final ao castelo, assumimos um "alvo" de XP um pouco maior ou infinito
-            // Se o usuário não definiu um XP pro castelo, usamos o dobro do último ou algo fixo
-            const targetXP = startXP + 100;
-
-            const xpRange = targetXP - startXP;
-            const segmentProgress = xpRange > 0 ? Math.max(0, Math.min((totalXP - startXP) / xpRange, 1)) : 1;
-
-            const precisePathProgress = startPathPos + (segmentProgress * (endPathPos - startPathPos));
-            return interpolatePath(precisePathProgress, totalPathSegments);
-        }
-
-        // Ponto de partida e destino do trecho atual
-        const startPathPos = getLessonPathPos(lessonIdx);
-        const endPathPos = getLessonPathPos(lessonIdx + 1);
-
-        const startXP = sortedLessons[lessonIdx].requiredXP;
-        const targetXP = sortedLessons[lessonIdx + 1].requiredXP;
-
-        const xpRange = targetXP - startXP;
-        const segmentProgress = xpRange > 0 ? Math.max(0, Math.min((totalXP - startXP) / xpRange, 1)) : 1;
-
-        const precisePathProgress = startPathPos + (segmentProgress * (endPathPos - startPathPos));
-        return interpolatePath(precisePathProgress, totalPathSegments);
+        // Clamp score between 0 and 1000
+        const score = Math.max(0, Math.min(Math.floor(totalXP), 1000));
+        const [x, y] = PATH_DATA[score] || [0, 0];
+        return { x, y };
     };
-
-    const interpolatePath = (precisePathProgress: number, totalPathSegments: number) => {
-        const currentPathSegment = Math.min(Math.floor(precisePathProgress), totalPathSegments - 1);
-        const t = precisePathProgress - currentPathSegment;
-
-        const p1 = pathPoints[currentPathSegment];
-        const p2 = pathPoints[currentPathSegment + 1];
-
-        return {
-            x: p1.x + (p2.x - p1.x) * t,
-            y: p1.y + (p2.y - p1.y) * t
-        };
-    };
-
 
     return (
         <div className="trail-container" style={{
             width: '100%',
             height: '100vh',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            position: 'relative' // Ensure relative positioning for children
         }}>
             <div className="vignette" />
 
-            {/* NO OVERLAY - PURE ART BACKGROUND */}
-
             {/* LESSON CHECKPOINTS */}
             {sortedLessons.map((lesson, index) => {
-                const totalPathSegments = pathPoints.length - 1;
-                // Lição 1 (index 0) fica exatamente no começo (0%)
-                const precisePathProgress = (index / Math.max(sortedLessons.length, 1)) * totalPathSegments;
-
-                const pos = interpolatePath(precisePathProgress, totalPathSegments);
+                const pos = getPosition(lesson.requiredXP);
                 const isEnd = index === sortedLessons.length - 1;
                 const isActive = activeLessonId === lesson.id;
                 const lessonMissions = missions.filter(m => m.targetLessonId === lesson.id);
@@ -152,9 +61,9 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                 return (
                     <div key={lesson.id} style={{
                         position: 'absolute',
-                        left: `${pos.x}%`,
-                        top: `${pos.y}%`,
-                        transform: 'translate(-50%, -100%)',
+                        left: `calc(50% + ${pos.x}px)`,
+                        bottom: `${pos.y}px`,
+                        transform: 'translate(-50%, 50%)', // Center on point (bottom-based Y)
                         zIndex: 200,
                         display: 'flex',
                         flexDirection: 'column',
@@ -302,12 +211,15 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                     <motion.div
                         key={student.id}
                         initial={false}
-                        animate={{ left: `${pos.x}%`, top: `${pos.y + 1}%` }}
+                        animate={{
+                            left: `calc(50% + ${pos.x}px)`,
+                            bottom: `${pos.y}px` // +1% removed, using pixels now
+                        }}
                         transition={{ type: 'spring', stiffness: 50, damping: 15 }}
                         style={{
                             position: 'absolute',
                             width: '55px', height: '55px',
-                            transform: 'translate(-50%, -50%)',
+                            transform: 'translate(-50%, 50%)', // Center on point
                             zIndex: isStudentActive ? 700 : 150,
                             cursor: 'pointer'
                         }}
@@ -450,3 +362,4 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
 };
 
 export default TrailScreen;
+
