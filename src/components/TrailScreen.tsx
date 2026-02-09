@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Student, Lesson, Mission } from '../App';
 import MaiAAssistant from './MaiAAssistant';
@@ -20,6 +20,17 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
     const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
     const [rewardToast, setRewardToast] = useState<{ xp: number, show: boolean }>({ xp: 0, show: false });
     const [isUploading, setIsUploading] = useState(false);
+    const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+
+    useEffect(() => {
+        const handleResize = () => setViewportWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    // "Zoom Out" logic for mobile: 
+    // We want a safe content zone of ~480px width to always fit.
+    const trailScale = viewportWidth < 480 ? (viewportWidth / 480) : 1;
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -80,295 +91,310 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
         }}>
             <div className="vignette" />
 
-            {/* LESSON CHECKPOINTS */}
-            {sortedLessons.map((lesson, index) => {
-                const pos = getPosition(lesson.requiredXP);
-                const isEnd = index === sortedLessons.length - 1;
-                const isActive = activeLessonId === lesson.id;
-                const lessonMissions = missions.filter(m => m.targetLessonId === lesson.id);
+            {/* SCALED CONTENT LAYER (Unzooms for mobile) */}
+            <div style={{
+                position: 'absolute',
+                bottom: 0,
+                left: '0',
+                width: '100%',
+                height: '100%',
+                transform: `scale(${trailScale})`,
+                transformOrigin: 'bottom center',
+                pointerEvents: 'none'
+            }}>
+                <div style={{ position: 'relative', width: '100%', height: '100%', pointerEvents: 'auto' }}>
+                    {/* LESSON CHECKPOINTS */}
+                    {sortedLessons.map((lesson, index) => {
+                        const pos = getPosition(lesson.requiredXP);
+                        const isEnd = index === sortedLessons.length - 1;
+                        const isActive = activeLessonId === lesson.id;
+                        const lessonMissions = missions.filter(m => m.targetLessonId === lesson.id);
 
-                return (
-                    <div key={lesson.id} style={{
-                        position: 'absolute',
-                        left: `calc(50% + ${pos.x}px)`,
-                        bottom: `${pos.y}px`,
-                        transform: 'translate(-50%, 50%)', // Center on point (bottom-based Y)
-                        zIndex: 200,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center'
-                    }}>
-                        {/* MISSION INDICATOR (📜) */}
-                        {lessonMissions.length > 0 && (
-                            <div style={{ position: 'absolute', right: '-45px', top: '0%' }}>
-                                {lessonMissions.map(m => {
-                                    const isMissionActive = activeMissionId === m.id;
-                                    return (
-                                        <div key={m.id} style={{ position: 'relative', marginBottom: '5px' }}>
-                                            <motion.button
-                                                onClick={(e) => { e.stopPropagation(); setActiveMissionId(isMissionActive ? null : m.id); }}
-                                                animate={{
-                                                    scale: isMissionActive ? 1.3 : 1,
-                                                    rotate: isMissionActive ? [0, 5, -5, 0] : 0
-                                                }}
-                                                style={{
-                                                    background: 'var(--primary)', border: '2px solid white',
-                                                    width: '45px', height: '45px', borderRadius: '50%',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    fontSize: '1.4rem', cursor: 'pointer', boxShadow: '0 5px 15px rgba(0,0,0,0.4)',
-                                                    color: 'white'
-                                                }}
-                                            >
-                                                📜
-                                            </motion.button>
-
-                                            <AnimatePresence>
-                                                {isMissionActive && (
-                                                    <motion.div
-                                                        initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                                                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                                                        exit={{ opacity: 0, scale: 0.8 }}
-                                                        className="game-card"
+                        return (
+                            <div key={lesson.id} style={{
+                                position: 'absolute',
+                                left: `calc(50% + ${pos.x}px)`,
+                                bottom: `${pos.y}px`,
+                                transform: 'translate(-50%, 50%)', // Center on point (bottom-based Y)
+                                zIndex: 200,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center'
+                            }}>
+                                {/* MISSION INDICATOR (📜) */}
+                                {lessonMissions.length > 0 && (
+                                    <div style={{ position: 'absolute', right: '-45px', top: '0%' }}>
+                                        {lessonMissions.map(m => {
+                                            const isMissionActive = activeMissionId === m.id;
+                                            return (
+                                                <div key={m.id} style={{ position: 'relative', marginBottom: '5px' }}>
+                                                    <motion.button
+                                                        onClick={(e) => { e.stopPropagation(); setActiveMissionId(isMissionActive ? null : m.id); }}
+                                                        animate={{
+                                                            scale: isMissionActive ? 1.3 : 1,
+                                                            rotate: isMissionActive ? [0, 5, -5, 0] : 0
+                                                        }}
                                                         style={{
-                                                            position: window.innerWidth < 600 ? 'fixed' : 'absolute',
-                                                            left: window.innerWidth < 600 ? '50%' : '55px',
-                                                            top: window.innerWidth < 600 ? '50%' : '0',
-                                                            transform: window.innerWidth < 600 ? 'translate(-50%, -50%)' : 'none',
-                                                            width: window.innerWidth < 600 ? '90vw' : '220px',
-                                                            maxWidth: '280px',
-                                                            padding: '15px', fontSize: '0.85rem',
-                                                            background: 'rgba(20, 20, 30, 0.98)',
-                                                            borderLeft: '4px solid var(--primary)',
-                                                            zIndex: 2100,
-                                                            boxShadow: '0 0 40px rgba(0,0,0,0.8)'
+                                                            background: 'var(--primary)', border: '2px solid white',
+                                                            width: '45px', height: '45px', borderRadius: '50%',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            fontSize: '1.4rem', cursor: 'pointer', boxShadow: '0 5px 15px rgba(0,0,0,0.4)',
+                                                            color: 'white'
                                                         }}
                                                     >
-                                                        {window.innerWidth < 600 && (
-                                                            <button
-                                                                onClick={() => setActiveMissionId(null)}
-                                                                style={{ position: 'absolute', right: '10px', top: '10px', background: 'transparent', border: 'none', color: 'white', fontSize: '1.2rem' }}
-                                                            >✕</button>
-                                                        )}
-                                                        <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>MISSÃO: {m.title.toUpperCase()}</div>
-                                                        <div style={{ marginTop: '5px', opacity: 0.9 }}>{m.description}</div>
-                                                        <div style={{ marginTop: '8px', color: 'var(--p-gold)', fontWeight: 'bold' }}>🏆 +{m.rewardXP} XP</div>
+                                                        📜
+                                                    </motion.button>
 
-                                                        {user?.role === 'student' && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    onCompleteMission(m.id, user.id);
-                                                                    setActiveMissionId(null);
-                                                                    setRewardToast({ xp: m.rewardXP, show: true });
-                                                                    setTimeout(() => setRewardToast(p => ({ ...p, show: false })), 3000);
-                                                                }}
+                                                    <AnimatePresence>
+                                                        {isMissionActive && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                                                                animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                                exit={{ opacity: 0, scale: 0.8 }}
+                                                                className="game-card"
                                                                 style={{
-                                                                    marginTop: '10px', width: '100%', padding: '6px',
-                                                                    background: 'var(--p-gold)', color: '#000',
-                                                                    border: 'none', borderRadius: '5px', fontWeight: '900',
-                                                                    fontSize: '0.65rem', cursor: 'pointer',
-                                                                    boxShadow: '0 4px 0 rgba(0,0,0,0.2)'
+                                                                    position: window.innerWidth < 600 ? 'fixed' : 'absolute',
+                                                                    left: window.innerWidth < 600 ? '50%' : '55px',
+                                                                    top: window.innerWidth < 600 ? '50%' : '0',
+                                                                    transform: window.innerWidth < 600 ? 'translate(-50%, -50%)' : 'none',
+                                                                    width: window.innerWidth < 600 ? '90vw' : '220px',
+                                                                    maxWidth: '280px',
+                                                                    padding: '15px', fontSize: '0.85rem',
+                                                                    background: 'rgba(20, 20, 30, 0.98)',
+                                                                    borderLeft: '4px solid var(--primary)',
+                                                                    zIndex: 2100,
+                                                                    boxShadow: '0 0 40px rgba(0,0,0,0.8)'
                                                                 }}
                                                             >
-                                                                SIM, EU FIZ! 🛡️
-                                                            </button>
+                                                                {window.innerWidth < 600 && (
+                                                                    <button
+                                                                        onClick={() => setActiveMissionId(null)}
+                                                                        style={{ position: 'absolute', right: '10px', top: '10px', background: 'transparent', border: 'none', color: 'white', fontSize: '1.2rem' }}
+                                                                    >✕</button>
+                                                                )}
+                                                                <div style={{ color: 'var(--primary)', fontWeight: 'bold' }}>MISSÃO: {m.title.toUpperCase()}</div>
+                                                                <div style={{ marginTop: '5px', opacity: 0.9 }}>{m.description}</div>
+                                                                <div style={{ marginTop: '8px', color: 'var(--p-gold)', fontWeight: 'bold' }}>🏆 +{m.rewardXP} XP</div>
+
+                                                                {user?.role === 'student' && (
+                                                                    <button
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            onCompleteMission(m.id, user.id);
+                                                                            setActiveMissionId(null);
+                                                                            setRewardToast({ xp: m.rewardXP, show: true });
+                                                                            setTimeout(() => setRewardToast(p => ({ ...p, show: false })), 3000);
+                                                                        }}
+                                                                        style={{
+                                                                            marginTop: '10px', width: '100%', padding: '6px',
+                                                                            background: 'var(--p-gold)', color: '#000',
+                                                                            border: 'none', borderRadius: '5px', fontWeight: '900',
+                                                                            fontSize: '0.65rem', cursor: 'pointer',
+                                                                            boxShadow: '0 4px 0 rgba(0,0,0,0.2)'
+                                                                        }}
+                                                                    >
+                                                                        SIM, EU FIZ! 🛡️
+                                                                    </button>
+                                                                )}
+                                                            </motion.div>
                                                         )}
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
+                                                    </AnimatePresence>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
 
-                        <motion.div
-                            onClick={() => setActiveLessonId(isActive ? null : lesson.id)}
-                            style={{ cursor: 'pointer' }}
-                            animate={{
-                                y: isActive ? [0, -30, 0] : [0, -10, 0],
-                                scale: isActive ? 1.5 : 1
-                            }}
-                            transition={{
-                                repeat: isActive ? 0 : Infinity,
-                                duration: isActive ? 0.4 : 4,
-                                type: 'spring',
-                                stiffness: 300
-                            }}
-                        >
-                            <span style={{
-                                fontSize: isEnd ? '4.5rem' : '2.8rem',
-                                filter: 'drop-shadow(0 0 15px rgba(0,0,0,0.5)) sepia(0.6) contrast(1.1)',
-                                display: 'block'
-                            }}>
-                                {isEnd ? '🏰' : (index === 0 && lesson.requiredXP === 0 ? '⛺' : '📖')}
-                            </span>
-                        </motion.div>
-
-                        <AnimatePresence>
-                            {isActive && (
                                 <motion.div
-                                    initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                                    exit={{ opacity: 0, y: 10, scale: 0.8 }}
-                                    className="game-card"
-                                    style={{
-                                        padding: '4px 12px', marginTop: '5px',
-                                        fontSize: '0.75rem', fontWeight: '900',
-                                        border: '2px solid var(--p-gold)', color: '#fff',
-                                        background: 'rgba(10, 14, 18, 0.95)',
-                                        borderRadius: '10px', boxShadow: '0 10px 20px rgba(0,0,0,0.5)',
-                                        whiteSpace: 'nowrap',
-                                        zIndex: 1000
+                                    onClick={() => setActiveLessonId(isActive ? null : lesson.id)}
+                                    style={{ cursor: 'pointer' }}
+                                    animate={{
+                                        y: isActive ? [0, -30, 0] : [0, -10, 0],
+                                        scale: isActive ? 1.5 : 1
+                                    }}
+                                    transition={{
+                                        repeat: isActive ? 0 : Infinity,
+                                        duration: isActive ? 0.4 : 4,
+                                        type: 'spring',
+                                        stiffness: 300
                                     }}
                                 >
-                                    {lesson.title.toUpperCase()}
+                                    <span style={{
+                                        fontSize: isEnd ? '4.5rem' : '2.8rem',
+                                        filter: 'drop-shadow(0 0 15px rgba(0,0,0,0.5)) sepia(0.6) contrast(1.1)',
+                                        display: 'block'
+                                    }}>
+                                        {isEnd ? '🏰' : (index === 0 && lesson.requiredXP === 0 ? '⛺' : '📖')}
+                                    </span>
                                 </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                );
-            })}
 
-            {/* STUDENT AVATARS (Interacting with the Map) */}
-            {students.map((student) => {
-                const total = student.score.estudo + student.score.louvor + student.score.atividades;
-                const pos = getAdjustedPosition(student);
-                const isStudentActive = activeStudentId === student.id;
-
-                return (
-                    <motion.div
-                        key={student.id}
-                        initial={false}
-                        animate={{
-                            left: `calc(50% + ${pos.x}px)`,
-                            bottom: `${pos.y}px` // +1% removed, using pixels now
-                        }}
-                        transition={{ type: 'spring', stiffness: 50, damping: 15 }}
-                        style={{
-                            position: 'absolute',
-                            width: '32px', height: '32px',
-                            transform: 'translate(-50%, 50%)', // Center on point
-                            zIndex: isStudentActive ? 700 : 300,
-                            cursor: 'pointer'
-                        }}
-                        onClick={() => setActiveStudentId(isStudentActive ? null : student.id)}
-                    >
-                        {/* Soft Ground Shadow */}
-                        <div style={{
-                            position: 'absolute', bottom: 1, left: '50%', transform: 'translateX(-50%)',
-                            width: '18px', height: '4px', background: 'rgba(0,0,0,0.4)', borderRadius: '50%',
-                            filter: 'blur(2px)'
-                        }} />
-
-                        <motion.div
-                            whileHover={{ scale: 1.1 }}
-                            animate={{ scale: isStudentActive ? 1.3 : 1 }}
-                            style={{
-                                width: '100%', height: '100%', borderRadius: '50%',
-                                border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
-                                background: '#2c3e50',
-                                overflow: 'hidden', position: 'relative'
-                            }}
-                        >
-                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.0rem' }}>
-                                {student.photo ? (
-                                    <img src={student.photo} alt={student.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                ) : '👤'}
+                                <AnimatePresence>
+                                    {isActive && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                                            className="game-card"
+                                            style={{
+                                                padding: '4px 12px', marginTop: '5px',
+                                                fontSize: '0.75rem', fontWeight: '900',
+                                                border: '2px solid var(--p-gold)', color: '#fff',
+                                                background: 'rgba(10, 14, 18, 0.95)',
+                                                borderRadius: '10px', boxShadow: '0 10px 20px rgba(0,0,0,0.5)',
+                                                whiteSpace: 'nowrap',
+                                                zIndex: 1000
+                                            }}
+                                        >
+                                            {lesson.title.toUpperCase()}
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
                             </div>
+                        );
+                    })}
 
-                            {/* Self-Profile Edit Overlay */}
-                            {user?.id === student.id && (
-                                <div
-                                    onClick={(e) => { e.stopPropagation(); document.getElementById(`avatar-upload-${student.id}`)?.click(); }}
+                    {/* STUDENT AVATARS (Interacting with the Map) */}
+                    {students.map((student) => {
+                        const total = student.score.estudo + student.score.louvor + student.score.atividades;
+                        const pos = getAdjustedPosition(student);
+                        const isStudentActive = activeStudentId === student.id;
+
+                        return (
+                            <motion.div
+                                key={student.id}
+                                initial={false}
+                                animate={{
+                                    left: `calc(50% + ${pos.x}px)`,
+                                    bottom: `${pos.y}px` // +1% removed, using pixels now
+                                }}
+                                transition={{ type: 'spring', stiffness: 50, damping: 15 }}
+                                style={{
+                                    position: 'absolute',
+                                    width: '32px', height: '32px',
+                                    transform: 'translate(-50%, 50%)', // Center on point
+                                    zIndex: isStudentActive ? 700 : 300,
+                                    cursor: 'pointer'
+                                }}
+                                onClick={() => setActiveStudentId(isStudentActive ? null : student.id)}
+                            >
+                                {/* Soft Ground Shadow */}
+                                <div style={{
+                                    position: 'absolute', bottom: 1, left: '50%', transform: 'translateX(-50%)',
+                                    width: '18px', height: '4px', background: 'rgba(0,0,0,0.4)', borderRadius: '50%',
+                                    filter: 'blur(2px)'
+                                }} />
+
+                                <motion.div
+                                    whileHover={{ scale: 1.1 }}
+                                    animate={{ scale: isStudentActive ? 1.3 : 1 }}
                                     style={{
-                                        position: 'absolute', inset: 0,
-                                        background: isStudentActive ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.2)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        opacity: isStudentActive ? 1 : 0.4,
-                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                        backdropFilter: isStudentActive ? 'blur(2px)' : 'none'
+                                        width: '100%', height: '100%', borderRadius: '50%',
+                                        border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
+                                        background: '#2c3e50',
+                                        overflow: 'hidden', position: 'relative'
                                     }}
                                 >
-                                    <span style={{ fontSize: isStudentActive ? '1.0rem' : '0.7rem', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>📷</span>
-                                    <input
-                                        id={`avatar-upload-${student.id}`} type="file" hidden accept="image/*"
-                                        onChange={handlePhotoUpload}
-                                    />
-                                    {isUploading && (
-                                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', color: '#fff', fontSize: '0.45rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2px' }}>
-                                            ...
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.0rem' }}>
+                                        {student.photo ? (
+                                            <img src={student.photo} alt={student.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : '👤'}
+                                    </div>
+
+                                    {/* Self-Profile Edit Overlay */}
+                                    {user?.id === student.id && (
+                                        <div
+                                            onClick={(e) => { e.stopPropagation(); document.getElementById(`avatar-upload-${student.id}`)?.click(); }}
+                                            style={{
+                                                position: 'absolute', inset: 0,
+                                                background: isStudentActive ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.2)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                opacity: isStudentActive ? 1 : 0.4,
+                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                backdropFilter: isStudentActive ? 'blur(2px)' : 'none'
+                                            }}
+                                        >
+                                            <span style={{ fontSize: isStudentActive ? '1.0rem' : '0.7rem', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>📷</span>
+                                            <input
+                                                id={`avatar-upload-${student.id}`} type="file" hidden accept="image/*"
+                                                onChange={handlePhotoUpload}
+                                            />
+                                            {isUploading && (
+                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', color: '#fff', fontSize: '0.45rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2px' }}>
+                                                    ...
+                                                </div>
+                                            )}
                                         </div>
                                     )}
-                                </div>
-                            )}
 
-                            {/* Presence Star (Gamification) */}
-                            {student.attendance?.includes(new Date().toLocaleDateString('en-CA')) && (
-                                <motion.div
-                                    initial={{ scale: 0, opacity: 0 }}
-                                    animate={{
-                                        scale: [1, 1.3, 1],
-                                        opacity: 1,
-                                        rotate: [0, 15, -15, 0],
-                                        filter: ['drop-shadow(0 0 8px gold)', 'drop-shadow(0 0 18px orange)', 'drop-shadow(0 0 8px gold)']
-                                    }}
-                                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                                    style={{
-                                        position: 'absolute', top: -18, right: -12,
-                                        fontSize: '1.8rem',
-                                        zIndex: 800, pointerEvents: 'none'
-                                    }}
-                                    title="Veio à aula hoje!"
-                                >
-                                    🌟
+                                    {/* Presence Star (Gamification) */}
+                                    {student.attendance?.includes(new Date().toLocaleDateString('en-CA')) && (
+                                        <motion.div
+                                            initial={{ scale: 0, opacity: 0 }}
+                                            animate={{
+                                                scale: [1, 1.3, 1],
+                                                opacity: 1,
+                                                rotate: [0, 15, -15, 0],
+                                                filter: ['drop-shadow(0 0 8px gold)', 'drop-shadow(0 0 18px orange)', 'drop-shadow(0 0 8px gold)']
+                                            }}
+                                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                                            style={{
+                                                position: 'absolute', top: -18, right: -12,
+                                                fontSize: '1.8rem',
+                                                zIndex: 800, pointerEvents: 'none'
+                                            }}
+                                            title="Veio à aula hoje!"
+                                        >
+                                            🌟
+                                        </motion.div>
+                                    )}
                                 </motion.div>
-                            )}
-                        </motion.div>
 
-                        <AnimatePresence>
-                            {isStudentActive && (
-                                <>
-                                    {/* Premium Gold Nameplate */}
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={{ opacity: 0, y: 10 }}
-                                        style={{ position: 'absolute', top: '-28px', left: '50%', transform: 'translateX(-50%)' }}
-                                    >
-                                        <div className="game-card" style={{
-                                            padding: '2px 5px', whiteSpace: 'nowrap', fontSize: '0.6rem', fontWeight: '900',
-                                            background: 'var(--p-gold)', color: '#000', border: '2px solid white',
-                                            boxShadow: '0 2px 0 rgba(0,0,0,0.2)'
-                                        }}>
-                                            {student.name}
-                                        </div>
-                                    </motion.div>
+                                <AnimatePresence>
+                                    {isStudentActive && (
+                                        <>
+                                            {/* Premium Gold Nameplate */}
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: 10 }}
+                                                style={{ position: 'absolute', top: '-28px', left: '50%', transform: 'translateX(-50%)' }}
+                                            >
+                                                <div className="game-card" style={{
+                                                    padding: '2px 5px', whiteSpace: 'nowrap', fontSize: '0.6rem', fontWeight: '900',
+                                                    background: 'var(--p-gold)', color: '#000', border: '2px solid white',
+                                                    boxShadow: '0 2px 0 rgba(0,0,0,0.2)'
+                                                }}>
+                                                    {student.name}
+                                                </div>
+                                            </motion.div>
 
-                                    {/* Level/XP Badge */}
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.5 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={{ opacity: 0, scale: 0.5 }}
-                                        style={{
-                                            position: 'absolute', bottom: -5, right: -15,
-                                            background: '#ff3f34', color: 'white', padding: '3px 8px',
-                                            borderRadius: '10px', fontSize: '0.7rem', fontWeight: '900',
-                                            border: '2px solid white', boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
-                                            zIndex: 701
-                                        }}
-                                    >
-                                        {total} XP
-                                    </motion.div>
-                                </>
-                            )}
-                        </AnimatePresence>
-                    </motion.div>
-                );
-            })}
+                                            {/* Level/XP Badge */}
+                                            <motion.div
+                                                initial={{ opacity: 0, scale: 0.5 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                exit={{ opacity: 0, scale: 0.5 }}
+                                                style={{
+                                                    position: 'absolute', bottom: -5, right: -15,
+                                                    background: '#ff3f34', color: 'white', padding: '3px 8px',
+                                                    borderRadius: '10px', fontSize: '0.7rem', fontWeight: '900',
+                                                    border: '2px solid white', boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
+                                                    zIndex: 701
+                                                }}
+                                            >
+                                                {total} XP
+                                            </motion.div>
+                                        </>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+                        );
+                    })}
 
-            <MaiAAssistant students={students} />
-            {/* REWARD TOAST */}
+                    <MaiAAssistant students={students} />
+                </div>
+            </div>
+
+            {/* REWARD TOAST (Fixed to viewport) */}
             <AnimatePresence>
                 {rewardToast.show && (
                     <motion.div
