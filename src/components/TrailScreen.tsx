@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Student, Lesson, Mission } from '../App';
 import MaiAAssistant from './MaiAAssistant';
-import { PATH_DATA } from '../utils/pathData';
+import { getTrailPosition } from '../utils/trailMath';
 
 interface TrailScreenProps {
     students: Student[];
@@ -62,11 +62,8 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
     };
 
     const getPosition = (totalXP: number) => {
-        // Clamp score between 0 and 1000
-        const score = Math.max(0, Math.min(Math.floor(totalXP), 1000));
-        const [x, y] = PATH_DATA[score] || [0, 0];
-        // Invert X based on user request to correct horizontal direction
-        return { x: -x, y };
+        const { x, y } = getTrailPosition(totalXP);
+        return { x: x * baseW, y: y * baseH };
     };
 
     const getAdjustedPosition = (student: Student) => {
