@@ -113,14 +113,7 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                 // Debug: border: '2px solid red'
             }}>
                 {/* Embedded Background (Ensures sync) */}
-                <div style={{
-                    position: 'absolute',
-                    inset: 0,
-                    backgroundImage: "url('/Imagem_Fundo_Melhorado.png')",
-                    backgroundSize: '100% 100%',
-                    backgroundPosition: 'center',
-                    opacity: 1
-                }} />
+                <div className="trail-stage-bg" />
 
                 <div style={{ position: 'relative', width: '100%', height: '100%', pointerEvents: 'auto' }}>
                     {/* LESSON CHECKPOINTS */}

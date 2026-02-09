@@ -30,7 +30,16 @@ body {
   background-color: var(--p-night);
   position: relative;
   overflow: hidden;
-  min-height: 100vh;
+  height: 100vh;
+}
+
+.trail-stage-bg {
+  position: absolute;
+  inset: 0;
+  background-image: url('/Imagem_Fundo_Melhorado.png');
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
 }
 
 /* MAGICAL PATH EFFECT */
