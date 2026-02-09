@@ -41,7 +41,7 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
     if (isVertical) {
         // Mobile portrait: stretch vertical to use more height
         scaleX = viewportSize.width / trailWidthRef;
-        scaleY = scaleX * 1.35; // 35% vertical stretch factor
+        scaleY = scaleX * 1.55; // Increased vertical stretch factor (+20% from previous)
     } else {
         // Desktop/Horizontal: maintain proportions (cover)
         scaleX = scaleY = Math.max(viewportSize.width / baseW, viewportSize.height / baseH);
