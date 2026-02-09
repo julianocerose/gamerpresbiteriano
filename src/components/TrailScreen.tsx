@@ -39,7 +39,8 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
         // Clamp score between 0 and 1000
         const score = Math.max(0, Math.min(Math.floor(totalXP), 1000));
         const [x, y] = PATH_DATA[score] || [0, 0];
-        return { x, y };
+        // Invert X based on user request to correct horizontal direction
+        return { x: -x, y };
     };
 
     return (
