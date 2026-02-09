@@ -27,10 +27,7 @@ body {
 
 /* MASTER BACKDROP */
 .trail-container {
-  background-image: url('/Imagem_Fundo_Melhorado.png');
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
+  background-color: var(--p-night);
   position: relative;
   overflow: hidden;
   min-height: 100vh;

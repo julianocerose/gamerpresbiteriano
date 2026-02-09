@@ -20,17 +20,19 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
     const [activeMissionId, setActiveMissionId] = useState<string | null>(null);
     const [rewardToast, setRewardToast] = useState<{ xp: number, show: boolean }>({ xp: 0, show: false });
     const [isUploading, setIsUploading] = useState(false);
-    const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
+    const [viewportSize, setViewportSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
     useEffect(() => {
-        const handleResize = () => setViewportWidth(window.innerWidth);
+        const handleResize = () => setViewportSize({ width: window.innerWidth, height: window.innerHeight });
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // "Zoom Out" logic for mobile: 
-    // We want a safe content zone of ~480px width to always fit.
-    const trailScale = viewportWidth < 480 ? (viewportWidth / 480) : 1;
+    // Master Scale logic (Mimics background-size: cover)
+    // Base resolution: 1024 x 1024 (square base to accommodate large Y ranges)
+    const baseW = 1000;
+    const baseH = 800; // Adjusted based on previous coordinate analysis (maxY ~430)
+    const stageScale = Math.max(viewportSize.width / baseW, viewportSize.height / baseH);
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -91,17 +93,28 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
         }}>
             <div className="vignette" />
 
-            {/* SCALED CONTENT LAYER (Unzooms for mobile) */}
+            {/* UNIFIED SCALING STAGE (Fundo e ícones travados juntos) */}
             <div style={{
                 position: 'absolute',
-                bottom: 0,
-                left: '0',
-                width: '100%',
-                height: '100%',
-                transform: `scale(${trailScale})`,
-                transformOrigin: 'bottom center',
-                pointerEvents: 'none'
+                top: '50%',
+                left: '50%',
+                width: `${baseW}px`,
+                height: `${baseH}px`,
+                transform: `translate(-50%, -50%) scale(${stageScale})`,
+                transformOrigin: 'center center',
+                pointerEvents: 'none',
+                // Debug: border: '2px solid red'
             }}>
+                {/* Embedded Background (Ensures sync) */}
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    backgroundImage: "url('/Imagem_Fundo_Melhorado.png')",
+                    backgroundSize: '100% 100%',
+                    backgroundPosition: 'center',
+                    opacity: 1
+                }} />
+
                 <div style={{ position: 'relative', width: '100%', height: '100%', pointerEvents: 'auto' }}>
                     {/* LESSON CHECKPOINTS */}
                     {sortedLessons.map((lesson, index) => {
