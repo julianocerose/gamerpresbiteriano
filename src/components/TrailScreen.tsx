@@ -28,11 +28,18 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
-    // Master Scale logic (Mimics background-size: cover)
-    // Base resolution: 1024 x 1024 (square base to accommodate large Y ranges)
+    // Master Scale & Centering Logic
     const baseW = 1000;
-    const baseH = 800; // Adjusted based on previous coordinate analysis (maxY ~430)
-    const stageScale = Math.max(viewportSize.width / baseW, viewportSize.height / baseH);
+    const baseH = 800;
+    const trailWidth = 650; // The horizontal safe zone we want to fit
+    const trailCenterX = 15; // The horizontal center of the path data
+
+    const isVertical = viewportSize.height > viewportSize.width;
+
+    // On vertical mobile, we fit the width. On desktop, we cover the screen.
+    const stageScale = isVertical
+        ? (viewportSize.width / trailWidth)
+        : Math.max(viewportSize.width / baseW, viewportSize.height / baseH);
 
     const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -97,7 +104,7 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
             <div style={{
                 position: 'absolute',
                 top: '50%',
-                left: '50%',
+                left: `calc(50% - ${trailCenterX}px)`,
                 width: `${baseW}px`,
                 height: `${baseH}px`,
                 transform: `translate(-50%, -50%) scale(${stageScale})`,
