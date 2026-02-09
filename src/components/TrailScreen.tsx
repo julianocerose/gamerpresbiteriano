@@ -43,6 +43,34 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
         return { x: -x, y };
     };
 
+    const getAdjustedPosition = (student: Student) => {
+        const total = student.score.estudo + student.score.louvor + student.score.atividades;
+        const pos = getPosition(total);
+
+        // Find if student is too close to any lesson
+        const collisionThreshold = 30; // pixels
+        const offsetDistance = 45; // pixels
+
+        const nearbyLesson = lessons.find(lesson => {
+            const lessonPos = getPosition(lesson.requiredXP);
+            const dx = pos.x - lessonPos.x;
+            const dy = pos.y - lessonPos.y;
+            return Math.sqrt(dx * dx + dy * dy) < collisionThreshold;
+        });
+
+        if (nearbyLesson) {
+            // Use student ID to create a deterministic but varied offset angle
+            const hash = student.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const angle = (hash % 8) * (Math.PI / 4); // 8 possible directions
+            return {
+                x: pos.x + Math.cos(angle) * offsetDistance,
+                y: pos.y + Math.sin(angle) * offsetDistance
+            };
+        }
+
+        return pos;
+    };
+
     return (
         <div className="trail-container" style={{
             width: '100%',
@@ -205,7 +233,7 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
             {/* STUDENT AVATARS (Interacting with the Map) */}
             {students.map((student) => {
                 const total = student.score.estudo + student.score.louvor + student.score.atividades;
-                const pos = getPosition(total);
+                const pos = getAdjustedPosition(student);
                 const isStudentActive = activeStudentId === student.id;
 
                 return (
@@ -219,18 +247,18 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                         transition={{ type: 'spring', stiffness: 50, damping: 15 }}
                         style={{
                             position: 'absolute',
-                            width: '55px', height: '55px',
+                            width: '32px', height: '32px',
                             transform: 'translate(-50%, 50%)', // Center on point
-                            zIndex: isStudentActive ? 700 : 150,
+                            zIndex: isStudentActive ? 700 : 300,
                             cursor: 'pointer'
                         }}
                         onClick={() => setActiveStudentId(isStudentActive ? null : student.id)}
                     >
                         {/* Soft Ground Shadow */}
                         <div style={{
-                            position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)',
-                            width: '30px', height: '8px', background: 'rgba(0,0,0,0.4)', borderRadius: '50%',
-                            filter: 'blur(3px)'
+                            position: 'absolute', bottom: 1, left: '50%', transform: 'translateX(-50%)',
+                            width: '18px', height: '4px', background: 'rgba(0,0,0,0.4)', borderRadius: '50%',
+                            filter: 'blur(2px)'
                         }} />
 
                         <motion.div
@@ -238,12 +266,12 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                             animate={{ scale: isStudentActive ? 1.3 : 1 }}
                             style={{
                                 width: '100%', height: '100%', borderRadius: '50%',
-                                border: '2px solid white', boxShadow: '0 8px 15px rgba(0,0,0,0.4)',
+                                border: '2px solid white', boxShadow: '0 4px 10px rgba(0,0,0,0.4)',
                                 background: '#2c3e50',
                                 overflow: 'hidden', position: 'relative'
                             }}
                         >
-                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
+                            <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.0rem' }}>
                                 {student.photo ? (
                                     <img src={student.photo} alt={student.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : '👤'}
@@ -262,14 +290,14 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                                         backdropFilter: isStudentActive ? 'blur(2px)' : 'none'
                                     }}
                                 >
-                                    <span style={{ fontSize: isStudentActive ? '1.5rem' : '1.1rem', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.5))' }}>📷</span>
+                                    <span style={{ fontSize: isStudentActive ? '1.0rem' : '0.7rem', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}>📷</span>
                                     <input
                                         id={`avatar-upload-${student.id}`} type="file" hidden accept="image/*"
                                         onChange={handlePhotoUpload}
                                     />
                                     {isUploading && (
-                                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', color: '#fff', fontSize: '0.55rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '5px' }}>
-                                            ENVIANDO...
+                                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.85)', color: '#fff', fontSize: '0.45rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '2px' }}>
+                                            ...
                                         </div>
                                     )}
                                 </div>
@@ -283,12 +311,12 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                                         scale: [1, 1.3, 1],
                                         opacity: 1,
                                         rotate: [0, 15, -15, 0],
-                                        filter: ['drop-shadow(0 0 10px gold)', 'drop-shadow(0 0 25px orange)', 'drop-shadow(0 0 10px gold)']
+                                        filter: ['drop-shadow(0 0 8px gold)', 'drop-shadow(0 0 18px orange)', 'drop-shadow(0 0 8px gold)']
                                     }}
                                     transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
                                     style={{
-                                        position: 'absolute', top: -35, right: -25,
-                                        fontSize: '3.5rem',
+                                        position: 'absolute', top: -18, right: -12,
+                                        fontSize: '1.8rem',
                                         zIndex: 800, pointerEvents: 'none'
                                     }}
                                     title="Veio à aula hoje!"
@@ -306,12 +334,12 @@ const TrailScreen = ({ students, lessons, missions, user, onCompleteMission, onU
                                         initial={{ opacity: 0, y: 10 }}
                                         animate={{ opacity: 1, y: 0 }}
                                         exit={{ opacity: 0, y: 10 }}
-                                        style={{ position: 'absolute', top: '-35px', left: '50%', transform: 'translateX(-50%)' }}
+                                        style={{ position: 'absolute', top: '-28px', left: '50%', transform: 'translateX(-50%)' }}
                                     >
                                         <div className="game-card" style={{
-                                            padding: '3px 8px', whiteSpace: 'nowrap', fontSize: '0.7rem', fontWeight: '900',
+                                            padding: '2px 5px', whiteSpace: 'nowrap', fontSize: '0.6rem', fontWeight: '900',
                                             background: 'var(--p-gold)', color: '#000', border: '2px solid white',
-                                            boxShadow: '0 3px 0 rgba(0,0,0,0.2)'
+                                            boxShadow: '0 2px 0 rgba(0,0,0,0.2)'
                                         }}>
                                             {student.name}
                                         </div>
